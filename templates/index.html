@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="hero-section">
-    <div class="hero-badge">Phase 4: Company Management & Eligibility Criteria</div>
+    <div class="hero-badge">Phase 6: Application &amp; Interview Tracking Module</div>
     <h1 class="hero-title">Campus Placement Analytics System</h1>
     <p class="hero-subtitle">
         Bridging the Python Flask web application with the Oracle SQL relational database.
@@ -73,19 +73,45 @@
                 </div>
             </div>
         </a>
+
+        <a href="{{ url_for('eligibility.eligibility_home') }}" class="dashboard-card">
+            <div class="card-icon">✅</div>
+            <div class="card-body">
+                <h3>Eligibility Checker</h3>
+                <p>Run a 6-point eligibility audit to instantly verify if a student qualifies for a specific company drive.</p>
+                <div class="card-meta">
+                    <span class="meta-badge">Company-Specific Rules</span>
+                    <span class="meta-link">Check Eligibility &rarr;</span>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('applications.list_applications') }}" class="dashboard-card">
+            <div class="card-icon">📋</div>
+            <div class="card-body">
+                <h3>Applications &amp; Interviews</h3>
+                <p>Manage candidate applications, interview rounds, evaluation scores, and selection statuses.</p>
+                <div class="card-meta">
+                    <span class="meta-badge">{{ application_count }} Total &bull; {{ selected_count }} Selected</span>
+                    <span class="meta-link">Track Applications &rarr;</span>
+                </div>
+            </div>
+        </a>
     </div>
 
     <!-- Architecture Roadmap Box -->
     <div class="info-card">
-        <h3>Current Pipeline: Phase 2 Architecture</h3>
+        <h3>Current Pipeline: Phase 6 Architecture</h3>
         <div class="pipeline-flow">
             <span class="pipeline-step">Browser UI</span>
             <span class="pipeline-arrow">&rarr;</span>
             <span class="pipeline-step">Flask Framework (app.py)</span>
             <span class="pipeline-arrow">&rarr;</span>
+            <span class="pipeline-step">Eligibility Engine</span>
+            <span class="pipeline-arrow">&rarr;</span>
             <span class="pipeline-step">python-oracledb Driver</span>
             <span class="pipeline-arrow">&rarr;</span>
-            <span class="pipeline-step">Oracle SQL (STUDENT / COMPANY)</span>
+            <span class="pipeline-step">Oracle SQL (APPLICATION / INTERVIEW)</span>
         </div>
     </div>
 </div>

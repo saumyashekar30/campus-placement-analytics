@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Interview Round #{{ interview.round_number }} — Application #{{ interview.application_id }}{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+
+    <div class="form-header">
+        <a href="{{ url_for('applications.view_application', application_id=interview.application_id) }}" class="back-link">
+            &larr; Back to Application #{{ interview.application_id }}
+        </a>
+        <h1 class="page-title">Edit Interview Round</h1>
+        <p class="page-subtitle">
+            Editing Round #{{ interview.round_number }} for
+            <strong>{{ application.student_name }}</strong> &rarr;
+            <strong>{{ application.company_name }}</strong> ({{ application.job_role }})
+        </p>
+    </div>
+
+    <div class="form-card">
+        <form method="POST"
+              action="{{ url_for('interviews.edit_interview', interview_id=interview.interview_id) }}">
+
+            <div class="form-section-title">Update Interview Round Details</div>
+            <p class="form-subnote">
+                Round Number is fixed. You can update Round Name, Date, Score, Status, and Feedback.
+            </p>
+
+            <div class="form-grid">
+
+                <!-- Round Number (read-only) -->
+                <div class="form-group">
+                    <label class="form-label">Round Number</label>
+                    <input type="text" class="form-control" value="{{ interview.round_number }}" disabled>
+                    <small class="form-help">Round number cannot be changed.</small>
+                </div>
+
+                <!-- Round Name -->
+                <div class="form-group">
+                    <label for="round_name" class="form-label">
+                        Round Name <span class="label-required">*</span>
+                    </label>
+                    <input type="text" id="round_name" name="round_name" class="form-control"
+                           required maxlength="50"
+                           value="{{ form.round_name if form else interview.round_name }}"
+                           placeholder="e.g. Technical Round, HR Round">
+                </div>
+
+                <!-- Interview Date -->
+                <div class="form-group">
+                    <label for="interview_date" class="form-label">
+                        Interview Date <span class="label-required">*</span>
+                    </label>
+                    <input type="date" id="interview_date" name="interview_date" class="form-control"
+                           required
+                           value="{{ form.interview_date if form else (interview.interview_date.strftime('%Y-%m-%d') if interview.interview_date and interview.interview_date.strftime is defined else interview.interview_date) }}">
+                </div>
+
+                <!-- Score (Optional) -->
+                <div class="form-group">
+                    <label for="score" class="form-label">Score (0–100)</label>
+                    <input type="number" id="score" name="score" class="form-control"
+                           min="0" max="100" step="0.01"
+                           value="{{ form.score if form else (interview.score if interview.score is not none else '') }}"
+                           placeholder="Optional">
+                    <small class="form-help">Score out of 100. Leave empty if not evaluated.</small>
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                    <label for="status" class="form-label">
+                        Result / Status <span class="label-required">*</span>
+                    </label>
+                    <select id="status" name="status" class="form-control" required>
+                        {% set current_status = form.status if form else interview.status %}
+                        {% for s in allowed_statuses %}
+                        <option value="{{ s }}" {% if s == current_status %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Feedback (full width) -->
+            <div class="form-group" style="margin-top: 0.5rem;">
+                <label for="feedback" class="form-label">Feedback / Notes</label>
+                <textarea id="feedback" name="feedback" class="form-control"
+                          rows="3" maxlength="1000"
+                          placeholder="Optional interviewer feedback…">{{ form.feedback if form else (interview.feedback or '') }}</textarea>
+                <small class="form-help">Max 1000 characters.</small>
+            </div>
+
+            <div class="form-actions" style="margin-top: 1.75rem;">
+                <button type="submit" class="btn-primary" style="padding: 0.85rem 1.75rem;">
+                    Save Changes
+                </button>
+                <a href="{{ url_for('applications.view_application', application_id=interview.application_id) }}"
+                   class="btn-secondary">Cancel</a>
+                <!-- Delete directly from edit form -->
+                <form method="POST"
+                      action="{{ url_for('interviews.delete_interview', interview_id=interview.interview_id) }}"
+                      class="inline-form"
+                      onsubmit="return confirm('Delete this interview round? The application will remain intact.')"
+                      style="margin-left: auto;">
+                    <button type="submit" class="btn-danger">Delete Round</button>
+                </form>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}

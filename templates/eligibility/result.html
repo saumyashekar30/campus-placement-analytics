@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Eligibility Result: {{ result.student.student_name }} &bull; {{ result.company.company_name }}{% endblock %}
+
+{% block content %}
+<div class="profile-page-container">
+
+    <!-- Navigation Header -->
+    <div style="margin-bottom: 1.25rem;">
+        <a href="{{ url_for('eligibility.eligibility_home') }}" class="back-link">&larr; Back to Eligibility Checker</a>
+    </div>
+
+    <!-- Verdict Banner -->
+    <div class="verdict-banner {% if result.overall_status == 'ELIGIBLE' %}verdict-eligible{% else %}verdict-ineligible{% endif %}">
+        <div class="verdict-icon">
+            {% if result.overall_status == 'ELIGIBLE' %}&#10004;{% else %}&#10008;{% endif %}
+        </div>
+        <div class="verdict-content">
+            <div class="verdict-title">
+                {{ result.overall_status }}
+            </div>
+            <div class="verdict-sub">
+                Candidate <strong>{{ result.student.student_name }}</strong>
+                {% if result.overall_status == 'ELIGIBLE' %}
+                    satisfies all eligibility criteria for <strong>{{ result.company.company_name }}</strong> ({{ result.company.job_role }}).
+                {% else %}
+                    does not meet one or more mandatory requirements for <strong>{{ result.company.company_name }}</strong> ({{ result.company.job_role }}).
+                {% endif %}
+            </div>
+        </div>
+        <div class="verdict-actions">
+            <a href="{{ url_for('eligibility.eligibility_home', company_id=result.company.company_id) }}" class="btn-secondary btn-sm">
+                Check Another Student
+            </a>
+        </div>
+    </div>
+
+    <!-- Failed Criteria Explanation Box (Only shown if NOT ELIGIBLE) -->
+    {% if result.overall_status != 'ELIGIBLE' and result.reasons %}
+    <div class="reasons-card">
+        <div class="reasons-header">
+            <span class="reasons-badge">&#9888; Action Required / Unmet Requirements</span>
+            <span class="reasons-count">{{ result.reasons|length }} Criteria Failed</span>
+        </div>
+        <ul class="reasons-list">
+            {% for reason in result.reasons %}
+            <li>
+                <span class="reason-x">&times;</span>
+                <span class="reason-text">{{ reason }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Candidate & Drive Context Cards (Side-by-Side) -->
+    <div class="cards-grid" style="margin-top: 1.5rem; margin-bottom: 2rem;">
+        <!-- Student Summary Card -->
+        <div class="mini-card" style="padding: 1.25rem; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <div>
+                    <span class="meta-badge">Candidate Profile</span>
+                    <h3 style="margin-top: 0.35rem; font-size: 1.15rem;">{{ result.student.student_name }}</h3>
+                </div>
+                <a href="{{ url_for('students.view_profile', student_id=result.student.student_id) }}" class="btn-action btn-view" title="Open profile">
+                    Full Profile &rarr;
+                </a>
+            </div>
+            <div class="info-table">
+                <div class="info-row">
+                    <span class="info-key">Student ID</span>
+                    <span class="info-value">#{{ result.student.student_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Branch</span>
+                    <span class="info-value"><span class="badge badge-branch branch-{{ result.student.branch|lower }}">{{ result.student.branch }}</span></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">CGPA</span>
+                    <span class="info-value"><strong>{{ "%.2f"|format(result.student.cgpa) }}</strong> / 10.00</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">10th / 12th %</span>
+                    <span class="info-value">{{ "%.1f"|format(result.student.tenth_percentage) }}% / {{ "%.1f"|format(result.student.twelfth_percentage) }}%</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Active Backlogs</span>
+                    <span class="info-value">
+                        {% if result.student.backlogs == 0 %}
+                            <span class="badge badge-success">0 Clear</span>
+                        {% else %}
+                            <span class="badge badge-warning">{{ result.student.backlogs }} Active</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Summary Card -->
+        <div class="mini-card" style="padding: 1.25rem; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <div>
+                    <span class="meta-badge">Recruiting Drive</span>
+                    <h3 style="margin-top: 0.35rem; font-size: 1.15rem;">{{ result.company.company_name }}</h3>
+                </div>
+                <a href="{{ url_for('companies.view_company', company_id=result.company.company_id) }}" class="btn-action btn-view" title="Open company drive">
+                    Drive Details &rarr;
+                </a>
+            </div>
+            <div class="info-table">
+                <div class="info-row">
+                    <span class="info-key">Job Role</span>
+                    <span class="info-value"><span class="role-pill">{{ result.company.job_role }}</span></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Package</span>
+                    <span class="info-value"><span class="package-badge">&#8377; {{ "%.2f"|format(result.company.package) }} LPA</span></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Req. CGPA</span>
+                    <span class="info-value">&ge; {{ "%.2f"|format(result.company.required_cgpa) }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Max Backlogs</span>
+                    <span class="info-value">&le; {{ result.company.max_backlogs }} Allowed</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Deadline</span>
+                    <span class="info-value">
+                        {% if result.company.application_deadline %}
+                            {{ result.company.application_deadline.strftime('%d %b %Y') if result.company.application_deadline.strftime is defined else result.company.application_deadline }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6-Point Audit Comparison Table -->
+    <div class="profile-section">
+        <h2 class="section-heading">Detailed 6-Point Eligibility Audit</h2>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 22%;">Eligibility Criteria</th>
+                        <th style="width: 28%;">Candidate Qualification</th>
+                        <th style="width: 32%;">Company Requirement</th>
+                        <th style="width: 18%; text-align: center;">Evaluation Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Row 1: CGPA -->
+                    <tr>
+                        <td><strong>Cumulative GPA (CGPA)</strong></td>
+                        <td class="cell-highlight">{{ "%.2f"|format(result.checks.cgpa.student_value) }}</td>
+                        <td>&ge; {{ "%.2f"|format(result.checks.cgpa.required_value) }}</td>
+                        <td style="text-align: center;">
+                            {% if result.checks.cgpa.status == 'PASS' %}
+                            <span class="badge badge-success">&check; PASS</span>
+                            {% else %}
+                            <span class="badge badge-danger">&times; FAIL</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Row 2: 10th Board % -->
+                    <tr>
+                        <td><strong>10th Board Percentage</strong></td>
+                        <td>{{ "%.1f"|format(result.checks.tenth.student_value) }}%</td>
+                        <td>&ge; {{ "%.1f"|format(result.checks.tenth.required_value) }}%</td>
+                        <td style="text-align: center;">
+                            {% if result.checks.tenth.status == 'PASS' %}
+                            <span class="badge badge-success">&check; PASS</span>
+                            {% else %}
+                            <span class="badge badge-danger">&times; FAIL</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Row 3: 12th Board % -->
+                    <tr>
+                        <td><strong>12th Board Percentage</strong></td>
+                        <td>{{ "%.1f"|format(result.checks.twelfth.student_value) }}%</td>
+                        <td>&ge; {{ "%.1f"|format(result.checks.twelfth.required_value) }}%</td>
+                        <td style="text-align: center;">
+                            {% if result.checks.twelfth.status == 'PASS' %}
+                            <span class="badge badge-success">&check; PASS</span>
+                            {% else %}
+                            <span class="badge badge-danger">&times; FAIL</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Row 4: Backlogs -->
+                    <tr>
+                        <td><strong>Active Backlogs</strong></td>
+                        <td>{{ result.checks.backlogs.student_value }} active</td>
+                        <td>&le; {{ result.checks.backlogs.required_value }} allowed</td>
+                        <td style="text-align: center;">
+                            {% if result.checks.backlogs.status == 'PASS' %}
+                            <span class="badge badge-success">&check; PASS</span>
+                            {% else %}
+                            <span class="badge badge-danger">&times; FAIL</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Row 5: Branch -->
+                    <tr>
+                        <td><strong>Engineering Branch</strong></td>
+                        <td>
+                            <span class="badge badge-branch branch-{{ result.checks.branch.student_value|lower }}">
+                                {{ result.checks.branch.student_value }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                                {% for b in result.checks.branch.required_value %}
+                                <span class="badge badge-branch branch-{{ b|lower }}">{{ b }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            {% if result.checks.branch.status == 'PASS' %}
+                            <span class="badge badge-success">&check; PASS</span>
+                            {% else %}
+                            <span class="badge badge-danger">&times; FAIL</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Row 6: Skills -->
+                    <tr>
+                        <td><strong>Technical Skills</strong></td>
+                        <td>
+                            {% if result.checks.skills.student_skills %}
+                            <div class="chip-list">
+                                {% for s in result.checks.skills.student_skills %}
+                                <span class="chip" style="font-size: 0.78rem; padding: 0.2rem 0.55rem;">{{ s }}</span>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <em class="text-muted">No skills on profile</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if result.checks.skills.required %}
+                            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                                {% if result.checks.skills.matched %}
+                                <div>
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #166534; text-transform: uppercase;">Matched:</span>
+                                    <div class="chip-list" style="margin-top: 0.2rem;">
+                                        {% for m in result.checks.skills.matched %}
+                                        <span class="chip" style="background: #dcfce7; border-color: #86efac; color: #166534; font-size: 0.78rem; padding: 0.2rem 0.55rem;">
+                                            &check; {{ m }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if result.checks.skills.missing %}
+                                <div>
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">Missing:</span>
+                                    <div class="chip-list" style="margin-top: 0.2rem;">
+                                        {% for miss in result.checks.skills.missing %}
+                                        <span class="chip" style="background: #fee2e2; border-color: #fca5a5; color: #991b1b; font-size: 0.78rem; padding: 0.2rem 0.55rem;">
+                                            &times; {{ miss }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <em class="text-muted">No technical skill cutoffs defined</em>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if result.checks.skills.status == 'PASS' %}
+                            <span class="badge badge-success">&check; PASS</span>
+                            {% else %}
+                            <span class="badge badge-danger">&times; FAIL</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bottom Action Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+        <a href="{{ url_for('eligibility.eligibility_home') }}" class="btn-secondary">
+            &larr; Check Another Student / Company
+        </a>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('students.view_profile', student_id=result.student.student_id) }}" class="btn-secondary">
+                View {{ result.student.student_name }}
+            </a>
+            <a href="{{ url_for('companies.view_company', company_id=result.company.company_id) }}" class="btn-secondary">
+                View {{ result.company.company_name }}
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

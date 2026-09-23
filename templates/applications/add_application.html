@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}New Application - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+
+    <div class="form-header">
+        <a href="{{ url_for('applications.list_applications') }}" class="back-link">&larr; Back to Applications</a>
+        <h1 class="page-title">Create New Application</h1>
+        <p class="page-subtitle">Select a student and a company drive. Eligibility is automatically verified before submission.</p>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-danger"><strong>Error:</strong> {{ error_message }}</div>
+    {% endif %}
+
+    <!-- Blocked: Ineligible Student -->
+    {% if blocked and eligibility_result %}
+    <div class="reasons-card" style="margin-bottom: 1.5rem;">
+        <div class="reasons-header">
+            <span class="reasons-badge">&#10008; Application Cannot Be Created</span>
+            <span class="reasons-count">{{ eligibility_result.reasons|length }} Criteria Failed</span>
+        </div>
+        <p style="padding: 0.75rem 1.25rem 0; font-size: 0.9rem; color: var(--text-secondary);">
+            <strong>{{ eligibility_result.student.student_name }}</strong> is
+            <strong style="color: var(--danger);">NOT ELIGIBLE</strong> for
+            <strong>{{ eligibility_result.company.company_name }}</strong> ({{ eligibility_result.company.job_role }}).
+        </p>
+        <ul class="reasons-list">
+            {% for reason in eligibility_result.reasons %}
+            <li>
+                <span class="reason-x">&times;</span>
+                <span class="reason-text">{{ reason }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <div style="padding: 0.75rem 1.25rem 1rem;">
+            <a href="{{ url_for('eligibility.eligibility_home', student_id=eligibility_result.student.student_id, company_id=eligibility_result.company.company_id) }}"
+               class="btn-secondary" style="font-size: 0.88rem;">
+                View Full Eligibility Report &rarr;
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Eligible confirmation panel -->
+    {% if eligibility_result and not blocked %}
+    <div class="info-card" style="border-left: 4px solid var(--success); margin-bottom: 1.5rem; background: var(--success-light);">
+        <p style="font-size: 0.95rem; color: #166534; font-weight: 600;">
+            &#10004; {{ eligibility_result.student.student_name }} is ELIGIBLE for
+            {{ eligibility_result.company.company_name }} ({{ eligibility_result.company.job_role }}).
+            Application is ready to submit.
+        </p>
+    </div>
+    {% endif %}
+
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('applications.add_application') }}">
+
+            <div class="form-section-title">Select Candidate &amp; Recruiting Company</div>
+            <p class="form-subnote">
+                Eligibility will be verified using the Phase 5 engine before the application is created.
+                Ineligible candidates cannot apply.
+            </p>
+
+            <div class="form-grid">
+                <!-- Student Dropdown -->
+                <div class="form-group">
+                    <label for="student_id" class="form-label">
+                        Student Candidate <span class="label-required">*</span>
+                    </label>
+                    <select id="student_id" name="student_id" class="form-control" required>
+                        <option value="" disabled {% if not selected_student_id %}selected{% endif %}>
+                            -- Select a Student --
+                        </option>
+                        {% for s in students %}
+                        <option value="{{ s.student_id }}"
+                            {% if selected_student_id == s.student_id %}selected{% endif %}>
+                            {{ s.student_name }} &bull; {{ s.branch }} (CGPA: {{ "%.2f"|format(s.cgpa) }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-help">Student's CGPA, 10th %, 12th %, backlogs, branch, and skills will be evaluated.</small>
+                </div>
+
+                <!-- Company Dropdown -->
+                <div class="form-group">
+                    <label for="company_id" class="form-label">
+                        Company Drive <span class="label-required">*</span>
+                    </label>
+                    <select id="company_id" name="company_id" class="form-control" required>
+                        <option value="" disabled {% if not selected_company_id %}selected{% endif %}>
+                            -- Select a Company Drive --
+                        </option>
+                        {% for c in companies %}
+                        <option value="{{ c.company_id }}"
+                            {% if selected_company_id == c.company_id %}selected{% endif %}>
+                            {{ c.company_name }} &bull; {{ c.job_role }}
+                            (&#8377; {{ "%.2f"|format(c.package) }} LPA)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-help">Company-specific criteria (CGPA, branches, skills) will be applied.</small>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 2rem;">
+                {% if not blocked %}
+                <button type="submit" class="btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    &#9654; Check Eligibility &amp; Apply
+                </button>
+                {% else %}
+                <button type="submit" class="btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    &#8635; Try Different Selection
+                </button>
+                {% endif %}
+                <a href="{{ url_for('applications.list_applications') }}" class="btn-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- How it works info box -->
+    <div class="info-card" style="margin-top: 2rem;">
+        <h3>How the Application Flow Works</h3>
+        <div style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.8; margin-top: 0.75rem;">
+            <p><strong>&#10003; Step 1:</strong> Select a student candidate and target company drive.</p>
+            <p><strong>&#10003; Step 2:</strong> The Phase 5 eligibility engine verifies all 6 criteria (CGPA, 10th %, 12th %, Backlogs, Branch, Skills).</p>
+            <p><strong>&#10003; Step 3:</strong> If the student is <span style="color: var(--success); font-weight: 700;">ELIGIBLE</span>, a new application is created with status <strong>Applied</strong>.</p>
+            <p><strong>&#10007; Blocked:</strong> If the student is <span style="color: var(--danger); font-weight: 700;">NOT ELIGIBLE</span>, the application is blocked and all failed criteria are displayed.</p>
+            <p><strong>&#10003; No Duplicates:</strong> Each student can apply to each company only once.</p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

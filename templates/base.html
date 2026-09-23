@@ -24,6 +24,8 @@
                 <a href="{{ url_for('home') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
                 <a href="{{ url_for('students.list_students') }}" class="nav-link {% if request.path.startswith('/students') %}active{% endif %}">Students</a>
                 <a href="{{ url_for('companies.list_companies') }}" class="nav-link {% if request.path.startswith('/companies') %}active{% endif %}">Companies</a>
+                <a href="{{ url_for('eligibility.eligibility_home') }}" class="nav-link {% if request.path.startswith('/eligibility') %}active{% endif %}">Eligibility Checker</a>
+                <a href="{{ url_for('applications.list_applications') }}" class="nav-link {% if request.path.startswith('/applications') or request.path.startswith('/interviews') %}active{% endif %}">Applications</a>
             </div>
         </div>
     </nav>
@@ -56,7 +58,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-container">
-            <p>Campus Placement Analytics System &bull; Phase 4: Company Management &bull; Oracle SQL + Flask</p>
+            <p>Campus Placement Analytics System &bull; Phase 6: Application &amp; Interview Tracking &bull; Oracle SQL + Flask</p>
         </div>
     </footer>
 

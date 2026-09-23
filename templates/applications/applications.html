@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Applications - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="profile-page-container">
+
+    <!-- Page Header -->
+    <div class="form-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 class="page-title">Applications</h1>
+                <p class="page-subtitle">Track all student applications to company placement drives.</p>
+            </div>
+            <a href="{{ url_for('applications.add_application') }}" class="btn-primary" style="padding: 0.75rem 1.5rem;">
+                + New Application
+            </a>
+        </div>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-danger"><strong>Error:</strong> {{ error_message }}</div>
+    {% endif %}
+
+    <!-- Stats Strip -->
+    <div class="stats-grid" style="margin-bottom: 1.5rem;">
+        <div class="stat-card">
+            <div class="stat-label">Total Applications</div>
+            <div class="stat-value">{{ applications|length }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Shortlisted</div>
+            <div class="stat-value">{{ applications|selectattr('status','equalto','Shortlisted')|list|length }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Selected</div>
+            <div class="stat-value" style="color: var(--success);">{{ applications|selectattr('status','equalto','Selected')|list|length }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Rejected</div>
+            <div class="stat-value" style="color: var(--danger);">{{ applications|selectattr('status','equalto','Rejected')|list|length }}</div>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="profile-section">
+        {% if applications %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Company</th>
+                        <th>Job Role</th>
+                        <th>Applied On</th>
+                        <th>Status</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">#{{ app.application_id }}</td>
+                        <td>
+                            <a href="{{ url_for('students.view_profile', student_id=app.student_id) }}"
+                               style="font-weight: 600; color: var(--primary); text-decoration: none;">
+                                {{ app.student_name }}
+                            </a>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ app.branch }}</div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('companies.view_company', company_id=app.company_id) }}"
+                               style="font-weight: 600; color: var(--text-primary); text-decoration: none;">
+                                {{ app.company_name }}
+                            </a>
+                        </td>
+                        <td><span class="role-pill">{{ app.job_role }}</span></td>
+                        <td style="font-size: 0.88rem; color: var(--text-secondary);">
+                            {% if app.application_date %}
+                                {{ app.application_date.strftime('%d %b %Y') if app.application_date.strftime is defined else app.application_date }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <span class="app-status-badge status-{{ app.status | lower | replace(' ', '-') }}">
+                                {{ app.status }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-group">
+                                <a href="{{ url_for('applications.view_application', application_id=app.application_id) }}"
+                                   class="btn-action btn-view" title="View Details">View</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-title">No Applications Yet</div>
+            <p class="empty-state-sub">Start by creating a student application for a company drive.</p>
+            <a href="{{ url_for('applications.add_application') }}" class="btn-primary" style="margin-top: 1rem;">
+                + Create First Application
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

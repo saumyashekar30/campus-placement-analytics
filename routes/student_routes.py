@@ -243,6 +243,7 @@ def view_profile(student_id):
     certifications = []
     projects = []
     internships = []
+    applications = []
 
     try:
         conn = database.get_db_connection()
@@ -302,6 +303,17 @@ def view_profile(student_id):
             """, id=student_id)
             internships = _rows_to_dicts(cursor, cursor.fetchall())
 
+            # 6. Fetch Applications (Phase 6)
+            cursor.execute("""
+                SELECT a.application_id, a.company_id, c.company_name, c.job_role,
+                       c.package, a.application_date, a.status
+                FROM APPLICATION a
+                JOIN COMPANY c ON a.company_id = c.company_id
+                WHERE a.student_id = :id
+                ORDER BY a.application_date DESC, a.application_id DESC
+            """, id=student_id)
+            applications = _rows_to_dicts(cursor, cursor.fetchall())
+
         conn.close()
     except Exception as e:
         flash(f"Error loading student profile: {str(e)}", "danger")
@@ -313,7 +325,8 @@ def view_profile(student_id):
         skills=skills,
         certifications=certifications,
         projects=projects,
-        internships=internships
+        internships=internships,
+        applications=applications
     )
 
 

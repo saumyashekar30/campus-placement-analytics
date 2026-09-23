@@ -330,6 +330,65 @@
         {% endif %}
     </div>
 
+    <!-- ====================================================================
+         SECTION 6: APPLICATIONS & DRIVE HISTORY (Phase 6)
+         ==================================================================== -->
+    <div class="profile-section">
+        <div class="section-header">
+            <h2 class="section-heading">Applications &amp; Drive History</h2>
+            <a href="{{ url_for('applications.add_application') }}" class="btn-secondary btn-sm">+ Apply to Drive</a>
+        </div>
+
+        {% if applications %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Company</th>
+                        <th>Job Role</th>
+                        <th>Package</th>
+                        <th>Applied On</th>
+                        <th>Status</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">#{{ app.application_id }}</td>
+                        <td>
+                            <a href="{{ url_for('companies.view_company', company_id=app.company_id) }}"
+                               style="font-weight: 600; color: var(--text-primary); text-decoration: none;">
+                                {{ app.company_name }}
+                            </a>
+                        </td>
+                        <td><span class="role-pill">{{ app.job_role }}</span></td>
+                        <td><span class="package-badge">&#8377; {{ "%.2f"|format(app.package) }} LPA</span></td>
+                        <td style="font-size: 0.88rem; color: var(--text-secondary);">
+                            {% if app.application_date %}
+                                {{ app.application_date.strftime('%d %b %Y') if app.application_date.strftime is defined else app.application_date }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <span class="app-status-badge status-{{ app.status | lower | replace(' ', '-') }}">
+                                {{ app.status }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <a href="{{ url_for('applications.view_application', application_id=app.application_id) }}"
+                               class="btn-action btn-view" title="View Application">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-note">No applications submitted yet. <a href="{{ url_for('applications.add_application') }}">Apply for a company drive &rarr;</a></p>
+        {% endif %}
+    </div>
+
 </div>
 
 <script>

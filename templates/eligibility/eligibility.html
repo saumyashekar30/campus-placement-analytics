@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Eligibility Checker - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <div class="form-header">
+        <a href="{{ url_for('home') }}" class="back-link">&larr; Back to Dashboard</a>
+        <h1 class="page-title">Candidate Eligibility Engine</h1>
+        <p class="page-subtitle">Dynamically verify whether a student satisfies the custom criteria defined for a specific company placement drive.</p>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-danger">
+        <strong>Database Error:</strong> {{ error_message }}
+    </div>
+    {% endif %}
+
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('eligibility.check_eligibility_route') }}">
+
+            <div class="form-section-title">Select Candidate & Recruiting Company</div>
+            <p class="form-subnote">Choose a student candidate and target company drive to run an instant 6-point eligibility audit.</p>
+
+            <div class="form-grid">
+                <!-- Select Student -->
+                <div class="form-group">
+                    <label for="student_id" class="form-label">
+                        Student Candidate <span class="label-required">*</span>
+                    </label>
+                    <select id="student_id" name="student_id" class="form-control" required>
+                        <option value="" disabled {% if not selected_student_id %}selected{% endif %}>-- Select Registered Student --</option>
+                        {% for s in students %}
+                        <option value="{{ s.student_id }}" {% if selected_student_id == s.student_id %}selected{% endif %}>
+                            {{ s.student_name }} &bull; {{ s.branch }} (CGPA: {{ "%.2f"|format(s.cgpa) }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-help">Candidate's CGPA, 10th %, 12th %, backlogs, branch, and skills will be evaluated.</small>
+                </div>
+
+                <!-- Select Company -->
+                <div class="form-group">
+                    <label for="company_id" class="form-label">
+                        Target Company Drive <span class="label-required">*</span>
+                    </label>
+                    <select id="company_id" name="company_id" class="form-control" required>
+                        <option value="" disabled {% if not selected_company_id %}selected{% endif %}>-- Select Company Drive --</option>
+                        {% for c in companies %}
+                        <option value="{{ c.company_id }}" {% if selected_company_id == c.company_id %}selected{% endif %}>
+                            {{ c.company_name }} &bull; {{ c.job_role }} (&#8377; {{ "%.2f"|format(c.package) }} LPA)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-help">Evaluation uses the company's specific cutoffs, allowed branches, and technical skills.</small>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 2rem;">
+                <button type="submit" class="btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    &#9654; Check Candidate Eligibility
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Context / Information Card -->
+    <div class="info-card" style="margin-top: 2rem;">
+        <h3>How Company-Specific Eligibility Verification Works</h3>
+        <div class="pipeline-flow" style="margin-top: 1rem;">
+            <div style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7;">
+                <p><strong>✓ No Single Global Rule:</strong> Each employer sets independent criteria stored across <code>COMPANY</code>, <code>COMPANY_BRANCH</code>, and <code>COMPANY_SKILL</code> relational tables.</p>
+                <p style="margin-top: 0.5rem;"><strong>✓ 6 Criteria Evaluated:</strong></p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.25rem;">
+                    <li><strong>CGPA:</strong> Candidate CGPA &ge; Company Minimum CGPA</li>
+                    <li><strong>10th Board %:</strong> Candidate 10th Score &ge; Company Minimum 10th %</li>
+                    <li><strong>12th Board %:</strong> Candidate 12th Score &ge; Company Minimum 12th %</li>
+                    <li><strong>Backlogs:</strong> Candidate Active Backlogs &le; Company Maximum Allowed</li>
+                    <li><strong>Branch:</strong> Candidate Department must match one of the company's allowed branches</li>
+                    <li><strong>Required Skills:</strong> Candidate must possess all technical skills specified by the employer</li>
+                </ul>
+                <p style="margin-top: 0.5rem;"><strong>✓ Comprehensive Audit:</strong> All criteria are evaluated unconditionally. If any criterion fails, the complete list of unmet requirements is clearly displayed.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -264,6 +264,7 @@ def view_company(company_id):
     company = None
     branches = []
     skills = []
+    applications = []
 
     try:
         conn = database.get_db_connection()
@@ -301,6 +302,17 @@ def view_company(company_id):
             """, id=company_id)
             skills = _rows_to_dicts(cursor, cursor.fetchall())
 
+            # 4. Fetch Applications / Applicants (Phase 6)
+            cursor.execute("""
+                SELECT a.application_id, a.student_id, s.student_name, s.branch,
+                       s.cgpa, a.application_date, a.status
+                FROM APPLICATION a
+                JOIN STUDENT s ON a.student_id = s.student_id
+                WHERE a.company_id = :id
+                ORDER BY a.application_date DESC, a.application_id DESC
+            """, id=company_id)
+            applications = _rows_to_dicts(cursor, cursor.fetchall())
+
         conn.close()
     except Exception as e:
         flash(f"Error loading company profile: {str(e)}", "danger")
@@ -310,7 +322,8 @@ def view_company(company_id):
         "companies/company_profile.html",
         company=company,
         branches=branches,
-        skills=skills
+        skills=skills,
+        applications=applications
     )
 
 
