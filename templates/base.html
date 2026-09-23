@@ -23,7 +23,7 @@
             <div class="nav-links">
                 <a href="{{ url_for('home') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
                 <a href="{{ url_for('students.list_students') }}" class="nav-link {% if request.path.startswith('/students') %}active{% endif %}">Students</a>
-                <a href="{{ url_for('list_companies') }}" class="nav-link {% if request.path.startswith('/companies') %}active{% endif %}">Companies</a>
+                <a href="{{ url_for('companies.list_companies') }}" class="nav-link {% if request.path.startswith('/companies') %}active{% endif %}">Companies</a>
             </div>
         </div>
     </nav>
@@ -56,7 +56,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-container">
-            <p>Campus Placement Analytics System &bull; Phase 3: Student Management Module &bull; Oracle SQL + Flask</p>
+            <p>Campus Placement Analytics System &bull; Phase 4: Company Management &bull; Oracle SQL + Flask</p>
         </div>
     </footer>
 

@@ -39,6 +39,27 @@ function closeDeleteModal() {
     if (modal) modal.style.display = 'none';
 }
 
+/**
+ * Delete confirmation modal for the company list page.
+ */
+function openCompanyDeleteModal(companyId, companyName) {
+    const modal = document.getElementById('companyDeleteModal');
+    const nameEl = document.getElementById('deleteCompanyName');
+    const idEl = document.getElementById('deleteCompanyID');
+    const form = document.getElementById('deleteCompanyForm');
+
+    if (!modal) return;
+    nameEl.textContent = companyName;
+    idEl.textContent = companyId;
+    form.action = '/companies/' + companyId + '/delete';
+    modal.style.display = 'flex';
+}
+
+function closeCompanyDeleteModal() {
+    const modal = document.getElementById('companyDeleteModal');
+    if (modal) modal.style.display = 'none';
+}
+
 // Close modal on backdrop click or ESC key
 document.addEventListener('DOMContentLoaded', function () {
     const alerts = document.querySelectorAll('.alert');
@@ -61,16 +82,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Close delete modal when clicking the backdrop overlay
-    const modal = document.getElementById('deleteModal');
-    if (modal) {
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) closeDeleteModal();
+    // Close delete modals when clicking the backdrop overlay
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function (e) {
+            if (e.target === deleteModal) closeDeleteModal();
+        });
+    }
+
+    const companyDeleteModal = document.getElementById('companyDeleteModal');
+    if (companyDeleteModal) {
+        companyDeleteModal.addEventListener('click', function (e) {
+            if (e.target === companyDeleteModal) closeCompanyDeleteModal();
         });
     }
 
     // Close delete modal on ESC key
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeDeleteModal();
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+            closeCompanyDeleteModal();
+        }
     });
 });

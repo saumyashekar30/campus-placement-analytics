@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Company Drive - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <div class="form-header">
+        <a href="{{ url_for('companies.list_companies') }}" class="back-link">&larr; Back to Companies</a>
+        <h1 class="page-title">Register Recruiting Company Drive</h1>
+        <p class="page-subtitle">Define job role details, compensation package, and company-specific eligibility cutoffs.</p>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('companies.add_company') }}" novalidate>
+
+            <!-- Section 1: Company & Job Details -->
+            <div class="form-section-title">Company & Job Overview</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="company_name" class="form-label">
+                        Company Name <span class="label-required">*</span>
+                    </label>
+                    <input type="text"
+                           id="company_name"
+                           name="company_name"
+                           class="form-control"
+                           placeholder="e.g. Google Cloud, Microsoft IDC"
+                           value="{{ form.company_name if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="job_role" class="form-label">
+                        Job Role / Designation <span class="label-required">*</span>
+                    </label>
+                    <input type="text"
+                           id="job_role"
+                           name="job_role"
+                           class="form-control"
+                           placeholder="e.g. Software Development Engineer"
+                           value="{{ form.job_role if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="package" class="form-label">
+                        Compensation Package (CTC in LPA) <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="package"
+                           name="package"
+                           class="form-control"
+                           placeholder="e.g. 14.50"
+                           step="0.01"
+                           min="0"
+                           value="{{ form.package if form else '' }}"
+                           required>
+                    <small class="form-help">Annual CTC in Lakhs Per Annum (₹ LPA).</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="application_deadline" class="form-label">
+                        Application Deadline <span class="label-required">*</span>
+                    </label>
+                    <input type="date"
+                           id="application_deadline"
+                           name="application_deadline"
+                           class="form-control"
+                           value="{{ form.application_deadline if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="drive_date" class="form-label">
+                        Campus Drive Date <span class="label-optional">(Optional)</span>
+                    </label>
+                    <input type="date"
+                           id="drive_date"
+                           name="drive_date"
+                           class="form-control"
+                           value="{{ form.drive_date if form else '' }}">
+                    <small class="form-help">Scheduled interview or on-campus drive date.</small>
+                </div>
+            </div>
+
+            <!-- Section 2: Academic Eligibility Cutoffs -->
+            <div class="form-section-title" style="margin-top: 2rem;">Company-Specific Academic Eligibility Cutoffs</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="required_cgpa" class="form-label">
+                        Minimum Required CGPA (0.00 - 10.00) <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="required_cgpa"
+                           name="required_cgpa"
+                           class="form-control"
+                           placeholder="e.g. 7.50 (0 if no cutoff)"
+                           step="0.01"
+                           min="0"
+                           max="10"
+                           value="{{ form.required_cgpa if form else '0.00' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="min_tenth_percentage" class="form-label">
+                        Minimum 10th Board % (0 - 100) <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="min_tenth_percentage"
+                           name="min_tenth_percentage"
+                           class="form-control"
+                           placeholder="e.g. 70.00 (0 if no cutoff)"
+                           step="0.01"
+                           min="0"
+                           max="100"
+                           value="{{ form.min_tenth_percentage if form else '0.00' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="min_twelfth_percentage" class="form-label">
+                        Minimum 12th Board % (0 - 100) <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="min_twelfth_percentage"
+                           name="min_twelfth_percentage"
+                           class="form-control"
+                           placeholder="e.g. 70.00 (0 if no cutoff)"
+                           step="0.01"
+                           min="0"
+                           max="100"
+                           value="{{ form.min_twelfth_percentage if form else '0.00' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_backlogs" class="form-label">
+                        Maximum Allowed Active Backlogs <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="max_backlogs"
+                           name="max_backlogs"
+                           class="form-control"
+                           placeholder="0 for strict no-backlog policy"
+                           min="0"
+                           value="{{ form.max_backlogs if form else '0' }}"
+                           required>
+                    <small class="form-help">Enter 0 to allow only students with zero active backlogs.</small>
+                </div>
+            </div>
+
+            <!-- Section 3: Allowed Academic Branches -->
+            <div class="form-section-title" style="margin-top: 2rem;">
+                Allowed Engineering Branches <span class="label-required">*</span>
+            </div>
+            <p class="form-subnote">Select all branches eligible to register for this drive. Stored in <code>COMPANY_BRANCH</code> table.</p>
+
+            {% set current_selected = selected_branches or (form.getlist('branches') if form else ['CSE', 'IT']) %}
+            <div class="branch-checkbox-grid">
+                <label class="checkbox-card">
+                    <input type="checkbox" name="branches" value="CSE" {% if 'CSE' in current_selected %}checked{% endif %}>
+                    <div class="checkbox-card-content">
+                        <strong>CSE</strong>
+                        <span>Computer Science & Engineering</span>
+                    </div>
+                </label>
+
+                <label class="checkbox-card">
+                    <input type="checkbox" name="branches" value="IT" {% if 'IT' in current_selected %}checked{% endif %}>
+                    <div class="checkbox-card-content">
+                        <strong>IT</strong>
+                        <span>Information Technology</span>
+                    </div>
+                </label>
+
+                <label class="checkbox-card">
+                    <input type="checkbox" name="branches" value="ECE" {% if 'ECE' in current_selected %}checked{% endif %}>
+                    <div class="checkbox-card-content">
+                        <strong>ECE</strong>
+                        <span>Electronics & Communication</span>
+                    </div>
+                </label>
+
+                <label class="checkbox-card">
+                    <input type="checkbox" name="branches" value="EEE" {% if 'EEE' in current_selected %}checked{% endif %}>
+                    <div class="checkbox-card-content">
+                        <strong>EEE</strong>
+                        <span>Electrical & Electronics</span>
+                    </div>
+                </label>
+
+                <label class="checkbox-card">
+                    <input type="checkbox" name="branches" value="MECH" {% if 'MECH' in current_selected %}checked{% endif %}>
+                    <div class="checkbox-card-content">
+                        <strong>MECH</strong>
+                        <span>Mechanical Engineering</span>
+                    </div>
+                </label>
+
+                <label class="checkbox-card">
+                    <input type="checkbox" name="branches" value="CIVIL" {% if 'CIVIL' in current_selected %}checked{% endif %}>
+                    <div class="checkbox-card-content">
+                        <strong>CIVIL</strong>
+                        <span>Civil Engineering</span>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Section 4: Skills & Job Description -->
+            <div class="form-section-title" style="margin-top: 2rem;">Required Skills & Description</div>
+
+            <div class="form-group">
+                <label for="skills_text" class="form-label">
+                    Initial Required Skills <span class="label-optional">(Optional, comma-separated)</span>
+                </label>
+                <input type="text"
+                       id="skills_text"
+                       name="skills_text"
+                       class="form-control"
+                       placeholder="e.g. Python, SQL, Docker, Data Structures"
+                       value="{{ form.skills_text if form else '' }}">
+                <small class="form-help">Separate skills with commas. You can also add or remove skills individually with custom proficiency on the company details page.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="job_description" class="form-label">
+                    Job Description / Requirements Overview <span class="label-optional">(Optional)</span>
+                </label>
+                <textarea id="job_description"
+                          name="job_description"
+                          class="form-control"
+                          rows="4"
+                          placeholder="Provide overview of responsibilities, technologies, hiring rounds, or work location...">{{ form.job_description if form else '' }}</textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <a href="{{ url_for('companies.list_companies') }}" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary">+ Register Company Drive</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Recruiting Companies & Job Drives - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <a href="{{ url_for('home') }}" class="back-link">&larr; Back to Dashboard</a>
+            <h1 class="page-title">Recruiting Companies & Placement Drives</h1>
+            <p class="page-subtitle">Manage company drives, eligibility cutoffs, allowed branches, and skill requirements.</p>
+        </div>
+        <div class="header-actions">
+            <span class="count-pill">{{ companies|length }} Companies</span>
+            <a href="{{ url_for('companies.add_company') }}" class="btn-primary">
+                <span>+</span> Add Company
+            </a>
+        </div>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-danger">
+        <strong>Database Query Error:</strong> {{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if companies %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Company Name</th>
+                    <th>Job Role</th>
+                    <th>Package (CTC)</th>
+                    <th>Req. CGPA</th>
+                    <th>10th %</th>
+                    <th>12th %</th>
+                    <th>Max Backlogs</th>
+                    <th>Deadline</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in companies %}
+                <tr>
+                    <td class="cell-id">#{{ c.company_id }}</td>
+                    <td class="cell-name">
+                        <a href="{{ url_for('companies.view_company', company_id=c.company_id) }}" class="name-link">
+                            {{ c.company_name }}
+                        </a>
+                    </td>
+                    <td class="cell-role">
+                        <span class="role-pill">{{ c.job_role }}</span>
+                    </td>
+                    <td>
+                        <span class="package-badge">&#8377; {{ "%.2f"|format(c.package) }} LPA</span>
+                    </td>
+                    <td class="cell-highlight">&ge; {{ "%.2f"|format(c.required_cgpa) }}</td>
+                    <td>&ge; {{ "%.1f"|format(c.min_tenth_percentage) }}%</td>
+                    <td>&ge; {{ "%.1f"|format(c.min_twelfth_percentage) }}%</td>
+                    <td>
+                        {% if c.max_backlogs == 0 %}
+                        <span class="badge badge-success">0 Backlogs</span>
+                        {% else %}
+                        <span class="badge badge-warning">&le; {{ c.max_backlogs }} Allowed</span>
+                        {% endif %}
+                    </td>
+                    <td class="cell-date">
+                        {% if c.application_deadline %}
+                            {{ c.application_deadline.strftime('%d %b %Y') if c.application_deadline.strftime is defined else c.application_deadline }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="cell-actions" style="text-align: right;">
+                        <a href="{{ url_for('companies.view_company', company_id=c.company_id) }}" class="btn-action btn-view" title="View Details">
+                            View
+                        </a>
+                        <a href="{{ url_for('companies.edit_company', company_id=c.company_id) }}" class="btn-action btn-edit" title="Edit Company">
+                            Edit
+                        </a>
+                        <button type="button"
+                                class="btn-action btn-delete"
+                                onclick="openCompanyDeleteModal('{{ c.company_id }}', '{{ c.company_name }}')"
+                                title="Delete Company">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif not error_message %}
+    <div class="empty-state">
+        <div class="empty-icon">🏢</div>
+        <h3>No company drive records found</h3>
+        <p>Register a new recruiting company drive to define custom eligibility rules.</p>
+        <a href="{{ url_for('companies.add_company') }}" class="btn-primary" style="margin-top: 1rem;">
+            + Register First Company Drive
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Company Delete Confirmation Modal -->
+<div id="companyDeleteModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Confirm Company Deletion</h3>
+            <button class="modal-close-btn" onclick="closeCompanyDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <strong id="deleteCompanyName"></strong> (ID: <span id="deleteCompanyID"></span>)?</p>
+            <p class="modal-warning">
+                ⚠️ All associated allowed branch criteria, required skills, and related applications will also be permanently deleted.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeCompanyDeleteModal()">Cancel</button>
+            <form id="deleteCompanyForm" method="POST" action="">
+                <button type="submit" class="btn-danger">Yes, Delete Company</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

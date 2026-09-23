@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.company_name }} - Company Drive Details{% endblock %}
+
+{% block content %}
+<div class="profile-page-container">
+
+    <!-- Profile Hero -->
+    <div class="profile-hero">
+        <div class="profile-hero-left">
+            <div class="profile-avatar company-avatar">
+                {{ company.company_name[0] | upper }}
+            </div>
+            <div class="profile-hero-info">
+                <h1 class="profile-name">{{ company.company_name }}</h1>
+                <div class="profile-meta">
+                    <span class="role-pill">{{ company.job_role }}</span>
+                    <span class="package-badge">&#8377; {{ "%.2f"|format(company.package) }} LPA</span>
+                    <span class="profile-meta-tag cgpa-tag">Req. CGPA &ge; {{ "%.2f"|format(company.required_cgpa) }}</span>
+                    {% if company.max_backlogs == 0 %}
+                    <span class="profile-meta-tag no-backlog-tag">&#10003; 0 Backlogs Only</span>
+                    {% else %}
+                    <span class="profile-meta-tag backlog-tag">&le; {{ company.max_backlogs }} Backlogs Allowed</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="profile-hero-actions">
+            <a href="{{ url_for('companies.edit_company', company_id=company.company_id) }}" class="btn-primary">Edit Drive</a>
+            <form method="POST"
+                  action="{{ url_for('companies.delete_company', company_id=company.company_id) }}"
+                  class="inline-form"
+                  onsubmit="return confirm('Are you sure you want to permanently delete {{ company.company_name }} and all associated eligibility criteria?');">
+                <button type="submit" class="btn-danger">Delete Company</button>
+            </form>
+            <a href="{{ url_for('companies.list_companies') }}" class="btn-secondary">&larr; All Companies</a>
+        </div>
+    </div>
+
+    <!-- Academic Eligibility Cutoffs Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Minimum CGPA</div>
+            <div class="stat-value">&ge; {{ "%.2f"|format(company.required_cgpa) }}</div>
+            <div class="stat-sub">out of 10.00 scale</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Min 10th Board %</div>
+            <div class="stat-value">&ge; {{ "%.1f"|format(company.min_tenth_percentage) }}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Min 12th Board %</div>
+            <div class="stat-value">&ge; {{ "%.1f"|format(company.min_twelfth_percentage) }}%</div>
+        </div>
+        <div class="stat-card {% if company.max_backlogs == 0 %}stat-card-success{% endif %}">
+            <div class="stat-label">Max Allowed Backlogs</div>
+            <div class="stat-value">{{ company.max_backlogs }}</div>
+            <div class="stat-sub">{% if company.max_backlogs == 0 %}Strict no-backlog rule{% else %}Maximum active backlogs{% endif %}</div>
+        </div>
+    </div>
+
+    <!-- Job & Drive Overview -->
+    <div class="profile-section">
+        <h2 class="section-heading">Drive Overview & Timeline</h2>
+        <div class="info-table">
+            <div class="info-row">
+                <span class="info-key">Company ID</span>
+                <span class="info-value">#{{ company.company_id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Job Role</span>
+                <span class="info-value"><strong>{{ company.job_role }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Compensation</span>
+                <span class="info-value"><span class="package-badge">&#8377; {{ "%.2f"|format(company.package) }} Lakhs Per Annum (LPA)</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Application Deadline</span>
+                <span class="info-value">
+                    {% if company.application_deadline %}
+                        📅 {{ company.application_deadline.strftime('%A, %d %B %Y') if company.application_deadline.strftime is defined else company.application_deadline }}
+                    {% else %}
+                        Not specified
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Campus Drive Date</span>
+                <span class="info-value">
+                    {% if company.drive_date %}
+                        🎯 {{ company.drive_date.strftime('%A, %d %B %Y') if company.drive_date.strftime is defined else company.drive_date }}
+                    {% else %}
+                        <em>To be announced</em>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Job Description</span>
+                <span class="info-value">
+                    {% if company.job_description %}
+                        {{ company.job_description }}
+                    {% else %}
+                        <em>No description provided.</em>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Allowed Branches (COMPANY_BRANCH) -->
+    <div class="profile-section">
+        <div class="section-row">
+            <div>
+                <h2 class="section-heading">Allowed Engineering Branches</h2>
+                <p class="form-subnote" style="margin-top: -0.5rem; margin-bottom: 0.5rem;">Only students enrolled in these departments satisfy the branch eligibility criterion.</p>
+            </div>
+            <button class="btn-add-sub" onclick="toggleSubForm('branch-form')">+ Add Branch</button>
+        </div>
+
+        <!-- Inline Form: Add Allowed Branch -->
+        <div class="sub-form hidden" id="branch-form">
+            <form method="POST" action="{{ url_for('companies.add_branch', company_id=company.company_id) }}">
+                <div class="sub-form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Branch to Allow <span class="label-required">*</span></label>
+                        <select name="branch_name" class="form-control" required>
+                            <option value="" disabled selected>Select Department</option>
+                            <option value="CSE">Computer Science & Engineering (CSE)</option>
+                            <option value="IT">Information Technology (IT)</option>
+                            <option value="ECE">Electronics & Communication (ECE)</option>
+                            <option value="EEE">Electrical & Electronics (EEE)</option>
+                            <option value="MECH">Mechanical Engineering (MECH)</option>
+                            <option value="CIVIL">Civil Engineering (CIVIL)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="sub-form-actions">
+                    <button type="submit" class="btn-primary btn-sm">Add Branch</button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="toggleSubForm('branch-form')">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        {% if branches %}
+        <div class="chip-list" style="margin-top: 0.5rem;">
+            {% for br in branches %}
+            <div class="chip">
+                <span class="badge badge-branch branch-{{ br|lower }}">{{ br }}</span>
+                <form method="POST"
+                      action="{{ url_for('companies.delete_branch', company_id=company.company_id) }}"
+                      class="inline-form"
+                      onsubmit="return confirm('Remove {{ br }} from allowed branches for this drive?');">
+                    <input type="hidden" name="branch_name" value="{{ br }}">
+                    <button type="submit" class="chip-delete" title="Remove branch">&times;</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-note">No allowed branches configured yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Section: Required Skills (COMPANY_SKILL) -->
+    <div class="profile-section">
+        <div class="section-row">
+            <div>
+                <h2 class="section-heading">Required Technical Skills</h2>
+                <p class="form-subnote" style="margin-top: -0.5rem; margin-bottom: 0.5rem;">Skills and minimum proficiency expectations requested by the employer.</p>
+            </div>
+            <button class="btn-add-sub" onclick="toggleSubForm('skill-form')">+ Add Skill</button>
+        </div>
+
+        <!-- Inline Form: Add Skill -->
+        <div class="sub-form hidden" id="skill-form">
+            <form method="POST" action="{{ url_for('companies.add_skill', company_id=company.company_id) }}">
+                <div class="sub-form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Skill Name <span class="label-required">*</span></label>
+                        <input type="text" name="skill_name" class="form-control" placeholder="e.g. Python, SQL, Docker, React" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Minimum Expected Proficiency <span class="label-required">*</span></label>
+                        <select name="min_proficiency" class="form-control" required>
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate" selected>Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                            <option value="Expert">Expert</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="sub-form-actions">
+                    <button type="submit" class="btn-primary btn-sm">Add Required Skill</button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="toggleSubForm('skill-form')">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        {% if skills %}
+        <div class="chip-list" style="margin-top: 0.5rem;">
+            {% for sk in skills %}
+            <div class="chip">
+                <span class="chip-name">{{ sk.skill_name }}</span>
+                <span class="chip-badge proficiency-{{ sk.min_proficiency | lower }}">{{ sk.min_proficiency }}</span>
+                <form method="POST"
+                      action="{{ url_for('companies.delete_skill', company_id=company.company_id) }}"
+                      class="inline-form"
+                      onsubmit="return confirm('Remove skill {{ sk.skill_name }} from company requirements?');">
+                    <input type="hidden" name="skill_name" value="{{ sk.skill_name }}">
+                    <button type="submit" class="chip-delete" title="Remove skill">&times;</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-note">No specific technical skills registered for this company.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

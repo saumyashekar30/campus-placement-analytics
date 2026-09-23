@@ -8,6 +8,7 @@ from decimal import Decimal
 from flask import Flask, render_template, request
 import database
 from routes.student_routes import student_bp
+from routes.company_routes import company_bp
 
 
 def _to_python(v):
@@ -21,6 +22,7 @@ app.secret_key = os.getenv("SECRET_KEY", "campus_placement_secret_key_2024")
 
 # Register Blueprints
 app.register_blueprint(student_bp)
+app.register_blueprint(company_bp)
 
 
 @app.route("/")
@@ -57,43 +59,6 @@ def home():
         db_message=db_message,
         student_count=student_count,
         company_count=company_count
-    )
-
-
-@app.route("/companies")
-def list_companies():
-    """
-    Companies Route:
-    - Fetches company drives from Oracle COMPANY table.
-    """
-    companies = []
-    error_message = None
-
-    try:
-        conn = database.get_db_connection()
-        with conn.cursor() as cursor:
-            query = """
-                SELECT company_id, company_name, job_role, required_cgpa,
-                       min_tenth_percentage, min_twelfth_percentage, max_backlogs,
-                       package, application_deadline
-                FROM COMPANY
-                ORDER BY company_id
-            """
-            cursor.execute(query)
-            columns = [col[0].lower() for col in cursor.description]
-            companies = [
-                {k: _to_python(v) for k, v in zip(columns, row)}
-                for row in cursor.fetchall()
-            ]
-        conn.close()
-    except Exception as e:
-        error_message = f"Failed to retrieve companies: {str(e)}"
-        print(f"[ERROR] {error_message}")
-
-    return render_template(
-        "companies.html",
-        companies=companies,
-        error_message=error_message
     )
 
 
