@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Companies - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <a href="{{ url_for('home') }}" class="back-link">&larr; Back to Dashboard</a>
+            <h1 class="page-title">Recruiting Companies & Job Drives</h1>
+            <p class="page-subtitle">Placement drives and eligibility criteria retrieved live from Oracle <code>COMPANY</code> table.</p>
+        </div>
+        <div class="page-stats">
+            <span class="count-pill">{{ companies|length }} Companies</span>
+        </div>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-danger">
+        <strong>Database Query Error:</strong> {{ error_message }}
+        <p class="alert-hint">Please verify that Oracle is running and your credentials in <code>database.py</code> are correct.</p>
+    </div>
+    {% endif %}
+
+    {% if companies %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Company ID</th>
+                    <th>Company Name</th>
+                    <th>Job Role</th>
+                    <th>Req. CGPA</th>
+                    <th>Min 10th %</th>
+                    <th>Min 12th %</th>
+                    <th>Max Backlogs</th>
+                    <th>Package (CTC)</th>
+                    <th>Deadline</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in companies %}
+                <tr>
+                    <td class="cell-id">#{{ c.company_id }}</td>
+                    <td class="cell-name"><strong>{{ c.company_name }}</strong></td>
+                    <td class="cell-role"><span class="role-pill">{{ c.job_role }}</span></td>
+                    <td class="cell-highlight">&ge; {{ "%.2f"|format(c.required_cgpa) }}</td>
+                    <td>&ge; {{ "%.1f"|format(c.min_tenth_percentage) }}%</td>
+                    <td>&ge; {{ "%.1f"|format(c.min_twelfth_percentage) }}%</td>
+                    <td>
+                        {% if c.max_backlogs == 0 %}
+                        <span class="badge badge-success">0 Backlogs</span>
+                        {% else %}
+                        <span class="badge badge-info">&le; {{ c.max_backlogs }} Allowed</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="package-badge">&#8377; {{ "%.2f"|format(c.package) }} LPA</span></td>
+                    <td class="cell-date">
+                        {% if c.application_deadline %}
+                            {{ c.application_deadline.strftime('%d %b %Y') if c.application_deadline.strftime is defined else c.application_deadline }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif not error_message %}
+    <div class="empty-state">
+        <div class="empty-icon">🏢</div>
+        <h3>No company drive records found</h3>
+        <p>Run <code>@02_seed_data.sql</code> in SQL*Plus to populate sample company drives.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

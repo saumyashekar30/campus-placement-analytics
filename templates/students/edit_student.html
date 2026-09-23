@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Student #{{ student.student_id }} - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <div class="form-header">
+        <a href="{{ url_for('students.view_profile', student_id=student.student_id) }}" class="back-link">&larr; Back to Student Profile</a>
+        <h1 class="page-title">Edit Student Profile</h1>
+        <p class="page-subtitle">Update the academic and personal details for student <strong>#{{ student.student_id }}</strong>.</p>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('students.edit_student', student_id=student.student_id) }}" novalidate>
+
+            <!-- Section 1: Identification -->
+            <div class="form-section-title">Personal & Academic Identification</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Student ID</label>
+                    <input type="text"
+                           class="form-control"
+                           value="#{{ student.student_id }}"
+                           disabled>
+                    <small class="form-help">Student ID cannot be changed after registration.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="student_name" class="form-label">
+                        Full Name <span class="label-required">*</span>
+                    </label>
+                    <input type="text"
+                           id="student_name"
+                           name="student_name"
+                           class="form-control"
+                           value="{{ student.student_name }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        Email Address <span class="label-required">*</span>
+                    </label>
+                    <input type="email"
+                           id="email"
+                           name="email"
+                           class="form-control"
+                           value="{{ student.email }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label">
+                        Phone Number <span class="label-optional">(Optional)</span>
+                    </label>
+                    <input type="tel"
+                           id="phone"
+                           name="phone"
+                           class="form-control"
+                           value="{{ student.phone or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="branch" class="form-label">
+                        Department / Branch <span class="label-required">*</span>
+                    </label>
+                    <select id="branch" name="branch" class="form-control" required>
+                        {% set current_branch = student.branch | upper %}
+                        <option value="CSE" {% if current_branch == 'CSE' %}selected{% endif %}>Computer Science (CSE)</option>
+                        <option value="IT"  {% if current_branch == 'IT'  %}selected{% endif %}>Information Technology (IT)</option>
+                        <option value="ECE" {% if current_branch == 'ECE' %}selected{% endif %}>Electronics & Comm. (ECE)</option>
+                        <option value="EEE" {% if current_branch == 'EEE' %}selected{% endif %}>Electrical & Electronics (EEE)</option>
+                        <option value="MECH" {% if current_branch == 'MECH' %}selected{% endif %}>Mechanical Engineering (MECH)</option>
+                        <option value="CIVIL" {% if current_branch == 'CIVIL' %}selected{% endif %}>Civil Engineering (CIVIL)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Section 2: Academic Scores -->
+            <div class="form-section-title" style="margin-top: 2rem;">Academic Metrics & Scores</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cgpa" class="form-label">
+                        CGPA (0.00 - 10.00) <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="cgpa"
+                           name="cgpa"
+                           class="form-control"
+                           step="0.01"
+                           min="0"
+                           max="10"
+                           value="{{ student.cgpa }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tenth_percentage" class="form-label">
+                        10th Percentage (%) <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="tenth_percentage"
+                           name="tenth_percentage"
+                           class="form-control"
+                           step="0.01"
+                           min="0"
+                           max="100"
+                           value="{{ student.tenth_percentage }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="twelfth_percentage" class="form-label">
+                        12th Percentage (%) <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="twelfth_percentage"
+                           name="twelfth_percentage"
+                           class="form-control"
+                           step="0.01"
+                           min="0"
+                           max="100"
+                           value="{{ student.twelfth_percentage }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="backlogs" class="form-label">
+                        Active Backlogs <span class="label-required">*</span>
+                    </label>
+                    <input type="number"
+                           id="backlogs"
+                           name="backlogs"
+                           class="form-control"
+                           min="0"
+                           value="{{ student.backlogs }}"
+                           required>
+                </div>
+            </div>
+
+            <!-- Section 3: Resume -->
+            <div class="form-section-title" style="margin-top: 2rem;">Resume Reference</div>
+
+            <div class="form-group">
+                <label for="resume_url" class="form-label">
+                    Resume Document Link / Filename <span class="label-optional">(Optional)</span>
+                </label>
+                <input type="text"
+                       id="resume_url"
+                       name="resume_url"
+                       class="form-control"
+                       placeholder="e.g. https://storage.edu/resume.pdf"
+                       value="{{ student.resume_url or '' }}">
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <a href="{{ url_for('students.view_profile', student_id=student.student_id) }}" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

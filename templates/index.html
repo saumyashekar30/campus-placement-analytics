@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-badge">Phase 2: Backend Integration</div>
+    <h1 class="hero-title">Campus Placement Analytics System</h1>
+    <p class="hero-subtitle">
+        Bridging the Python Flask web application with the Oracle SQL relational database.
+    </p>
+
+    <!-- System Status Panel -->
+    <div class="status-panel">
+        <div class="status-item success">
+            <div class="status-indicator">
+                <span class="status-dot pulse-green"></span>
+            </div>
+            <div class="status-details">
+                <div class="status-title">Flask Backend</div>
+                <div class="status-subtitle">✓ Server Running on Port 5000</div>
+            </div>
+        </div>
+
+        {% if db_connected %}
+        <div class="status-item success">
+            <div class="status-indicator">
+                <span class="status-dot pulse-green"></span>
+            </div>
+            <div class="status-details">
+                <div class="status-title">Oracle Database</div>
+                <div class="status-subtitle">✓ Connected &bull; {{ db_message }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="status-item error">
+            <div class="status-indicator">
+                <span class="status-dot red"></span>
+            </div>
+            <div class="status-details">
+                <div class="status-title">Oracle Database</div>
+                <div class="status-subtitle">✗ Not Connected &bull; {{ db_message }}</div>
+                <p class="status-hint">
+                    Update <code>DB_USER</code> and <code>DB_PASSWORD</code> in <code>database.py</code>.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Navigation Cards -->
+    <div class="cards-grid">
+        <a href="{{ url_for('students.list_students') }}" class="dashboard-card">
+            <div class="card-icon">👨‍🎓</div>
+            <div class="card-body">
+                <h3>Registered Students</h3>
+                <p>Browse academic profiles, CGPA, percentages, and backlog counts from Oracle.</p>
+                <div class="card-meta">
+                    <span class="meta-badge">{{ student_count }} Students Recorded</span>
+                    <span class="meta-link">View Students &rarr;</span>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('list_companies') }}" class="dashboard-card">
+            <div class="card-icon">🏢</div>
+            <div class="card-body">
+                <h3>Recruiting Companies</h3>
+                <p>Explore placement drives, salary packages, eligibility cutoffs, and deadlines.</p>
+                <div class="card-meta">
+                    <span class="meta-badge">{{ company_count }} Drives Active</span>
+                    <span class="meta-link">View Companies &rarr;</span>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Architecture Roadmap Box -->
+    <div class="info-card">
+        <h3>Current Pipeline: Phase 2 Architecture</h3>
+        <div class="pipeline-flow">
+            <span class="pipeline-step">Browser UI</span>
+            <span class="pipeline-arrow">&rarr;</span>
+            <span class="pipeline-step">Flask Framework (app.py)</span>
+            <span class="pipeline-arrow">&rarr;</span>
+            <span class="pipeline-step">python-oracledb Driver</span>
+            <span class="pipeline-arrow">&rarr;</span>
+            <span class="pipeline-step">Oracle SQL (STUDENT / COMPANY)</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Student - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <div class="form-header">
+        <a href="{{ url_for('students.list_students') }}" class="back-link">&larr; Back to Students List</a>
+        <h1 class="page-title">Register New Student</h1>
+        <p class="page-subtitle">Fill in the academic and personal details to create a student candidate profile.</p>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('students.add_student') }}" novalidate>
+            <!-- Section 1: Identification & Personal Info -->
+            <div class="form-section-title">Personal & Academic Identification</div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="student_id" class="form-label">
+                        Student ID <span class="label-optional">(Optional)</span>
+                    </label>
+                    <input type="number" 
+                           id="student_id" 
+                           name="student_id" 
+                           class="form-control" 
+                           placeholder="e.g. 11 or 2401 (Auto-generated if empty)"
+                           value="{{ form.student_id if form else '' }}"
+                           min="1">
+                    <small class="form-help">Leave empty to auto-generate the next sequential ID.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="student_name" class="form-label">
+                        Full Name <span class="label-required">*</span>
+                    </label>
+                    <input type="text" 
+                           id="student_name" 
+                           name="student_name" 
+                           class="form-control" 
+                           placeholder="e.g. Saumya Sharma"
+                           value="{{ form.student_name if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        College Email Address <span class="label-required">*</span>
+                    </label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="form-control" 
+                           placeholder="e.g. saumya@college.edu"
+                           value="{{ form.email if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label">
+                        Contact Phone Number <span class="label-optional">(Optional)</span>
+                    </label>
+                    <input type="tel" 
+                           id="phone" 
+                           name="phone" 
+                           class="form-control" 
+                           placeholder="e.g. 9876543210"
+                           value="{{ form.phone if form else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="branch" class="form-label">
+                        Department / Branch <span class="label-required">*</span>
+                    </label>
+                    <select id="branch" name="branch" class="form-control" required>
+                        <option value="" disabled {% if not form or not form.branch %}selected{% endif %}>Select Branch</option>
+                        <option value="CSE" {% if form and form.branch == 'CSE' %}selected{% endif %}>Computer Science (CSE)</option>
+                        <option value="IT" {% if form and form.branch == 'IT' %}selected{% endif %}>Information Technology (IT)</option>
+                        <option value="ECE" {% if form and form.branch == 'ECE' %}selected{% endif %}>Electronics & Comm. (ECE)</option>
+                        <option value="EEE" {% if form and form.branch == 'EEE' %}selected{% endif %}>Electrical & Electronics (EEE)</option>
+                        <option value="MECH" {% if form and form.branch == 'MECH' %}selected{% endif %}>Mechanical Engineering (MECH)</option>
+                        <option value="CIVIL" {% if form and form.branch == 'CIVIL' %}selected{% endif %}>Civil Engineering (CIVIL)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Section 2: Academic Performance Metrics -->
+            <div class="form-section-title" style="margin-top: 2rem;">Academic Metrics & Scores</div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cgpa" class="form-label">
+                        Current CGPA (0.00 - 10.00) <span class="label-required">*</span>
+                    </label>
+                    <input type="number" 
+                           id="cgpa" 
+                           name="cgpa" 
+                           class="form-control" 
+                           placeholder="e.g. 8.75" 
+                           step="0.01" 
+                           min="0" 
+                           max="10"
+                           value="{{ form.cgpa if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tenth_percentage" class="form-label">
+                        10th Board Percentage (%) <span class="label-required">*</span>
+                    </label>
+                    <input type="number" 
+                           id="tenth_percentage" 
+                           name="tenth_percentage" 
+                           class="form-control" 
+                           placeholder="e.g. 92.40" 
+                           step="0.01" 
+                           min="0" 
+                           max="100"
+                           value="{{ form.tenth_percentage if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="twelfth_percentage" class="form-label">
+                        12th Board Percentage (%) <span class="label-required">*</span>
+                    </label>
+                    <input type="number" 
+                           id="twelfth_percentage" 
+                           name="twelfth_percentage" 
+                           class="form-control" 
+                           placeholder="e.g. 94.20" 
+                           step="0.01" 
+                           min="0" 
+                           max="100"
+                           value="{{ form.twelfth_percentage if form else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="backlogs" class="form-label">
+                        Active Backlogs Count <span class="label-required">*</span>
+                    </label>
+                    <input type="number" 
+                           id="backlogs" 
+                           name="backlogs" 
+                           class="form-control" 
+                           placeholder="0 if none" 
+                           min="0"
+                           value="{{ form.backlogs if form else '0' }}"
+                           required>
+                </div>
+            </div>
+
+            <!-- Section 3: Profile Link / Resume -->
+            <div class="form-section-title" style="margin-top: 2rem;">Resume Document Reference</div>
+            
+            <div class="form-group">
+                <label for="resume_url" class="form-label">
+                    Resume Document Link / Filename <span class="label-optional">(Optional)</span>
+                </label>
+                <input type="text" 
+                       id="resume_url" 
+                       name="resume_url" 
+                       class="form-control" 
+                       placeholder="e.g. https://storage.college.edu/resumes/saumya.pdf or resume.pdf"
+                       value="{{ form.resume_url if form else '' }}">
+                <small class="form-help">Enter a public document URL or file path for the student's resume.</small>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <a href="{{ url_for('students.list_students') }}" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary">+ Register Student</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

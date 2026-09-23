@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Campus Placement Analytics System{% endblock %}</title>
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('home') }}" class="nav-brand">
+                <span class="brand-icon">🎓</span>
+                <span class="brand-text">Placement<strong>Analytics</strong></span>
+            </a>
+            <div class="nav-links">
+                <a href="{{ url_for('home') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+                <a href="{{ url_for('students.list_students') }}" class="nav-link {% if request.path.startswith('/students') %}active{% endif %}">Students</a>
+                <a href="{{ url_for('list_companies') }}" class="nav-link {% if request.path.startswith('/companies') %}active{% endif %}">Companies</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Shell -->
+    <main class="main-content">
+        <!-- Flash Alert Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash-alert flash-{{ category }}">
+                            <span class="flash-icon">
+                                {% if category == 'success' %}✓
+                                {% elif category == 'danger' %}⚠
+                                {% elif category == 'warning' %}!
+                                {% else %}ℹ{% endif %}
+                            </span>
+                            <span class="flash-message">{{ message }}</span>
+                            <button class="flash-close" onclick="this.parentElement.remove();">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>Campus Placement Analytics System &bull; Phase 3: Student Management Module &bull; Oracle SQL + Flask</p>
+        </div>
+    </footer>
+
+    <!-- Vanilla JavaScript for Modals & Confirmations -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Students Roster - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <a href="{{ url_for('home') }}" class="back-link">&larr; Back to Dashboard</a>
+            <h1 class="page-title">Registered Students</h1>
+            <p class="page-subtitle">Manage candidate records, academic scores, and recruitment profiles.</p>
+        </div>
+        <div class="header-actions">
+            <span class="count-pill">{{ students|length }} Students</span>
+            <a href="{{ url_for('students.add_student') }}" class="btn-primary">
+                <span>+</span> Add Student
+            </a>
+        </div>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-danger">
+        <strong>Database Query Error:</strong> {{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if students %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Branch</th>
+                    <th>CGPA</th>
+                    <th>10th %</th>
+                    <th>12th %</th>
+                    <th>Backlogs</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td class="cell-id">#{{ s.student_id }}</td>
+                    <td class="cell-name">
+                        <a href="{{ url_for('students.view_profile', student_id=s.student_id) }}" class="name-link">
+                            {{ s.student_name }}
+                        </a>
+                    </td>
+                    <td><span class="badge badge-branch branch-{{ s.branch|lower }}">{{ s.branch }}</span></td>
+                    <td class="cell-highlight">{{ "%.2f"|format(s.cgpa) }}</td>
+                    <td>{{ "%.1f"|format(s.tenth_percentage) }}%</td>
+                    <td>{{ "%.1f"|format(s.twelfth_percentage) }}%</td>
+                    <td>
+                        {% if s.backlogs == 0 %}
+                        <span class="badge badge-success">0 Clear</span>
+                        {% else %}
+                        <span class="badge badge-warning">{{ s.backlogs }} Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="cell-actions" style="text-align: right;">
+                        <a href="{{ url_for('students.view_profile', student_id=s.student_id) }}" class="btn-action btn-view" title="View Profile">
+                            View
+                        </a>
+                        <a href="{{ url_for('students.edit_student', student_id=s.student_id) }}" class="btn-action btn-edit" title="Edit Student">
+                            Edit
+                        </a>
+                        <button type="button" 
+                                class="btn-action btn-delete" 
+                                onclick="openDeleteModal('{{ s.student_id }}', '{{ s.student_name }}')"
+                                title="Delete Student">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif not error_message %}
+    <div class="empty-state">
+        <div class="empty-icon">👨‍🎓</div>
+        <h3>No student records found</h3>
+        <p>Click the button below to register the first student candidate.</p>
+        <a href="{{ url_for('students.add_student') }}" class="btn-primary" style="margin-top: 1rem;">
+            + Register First Student
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Global Delete Confirmation Modal -->
+<div id="deleteModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Confirm Student Deletion</h3>
+            <button class="modal-close-btn" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete student <strong id="deleteStudentName"></strong> (ID: <span id="deleteStudentID"></span>)?</p>
+            <p class="modal-warning">
+                ⚠️ All associated skills, certifications, projects, and internships will also be permanently removed.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            <form id="deleteStudentForm" method="POST" action="">
+                <button type="submit" class="btn-danger">Yes, Delete Student</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
