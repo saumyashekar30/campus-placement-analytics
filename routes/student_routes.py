@@ -271,9 +271,9 @@ def view_profile(student_id):
             """, id=student_id)
             skills = _rows_to_dicts(cursor, cursor.fetchall())
 
-            # 3. Fetch Certifications (alias issuing_organization -> issuing_org for template)
+            # 3. Fetch Certifications (alias issuing_organization -> issuing_org and certification_id -> cert_id)
             cursor.execute("""
-                SELECT certification_id, cert_name,
+                SELECT certification_id, certification_id AS cert_id, cert_name,
                        issuing_organization AS issuing_org,
                        issue_date, expiry_date, credential_id
                 FROM CERTIFICATION
@@ -552,7 +552,7 @@ def add_certification(student_id):
         return redirect(url_for("students.view_profile", student_id=student_id))
 
     try:
-        issue_date = datetime.strptime(raw_issue, "%Y-%m-%d").date()
+        issue_date = datetime.strptime(raw_issue, "%Y-%m-%d").date() if raw_issue else datetime.now().date()
         expiry_date = datetime.strptime(raw_expiry, "%Y-%m-%d").date() if raw_expiry else None
 
         if expiry_date and expiry_date < issue_date:
@@ -603,7 +603,7 @@ def delete_certification(student_id, cert_id):
 @student_bp.route("/<int:student_id>/projects/add", methods=["POST"])
 def add_project(student_id):
     title = request.form.get("project_name", "").strip()   # form sends 'project_name'
-    tech_stack = request.form.get("tech_stack", "").strip()
+    tech_stack = request.form.get("tech_stack", "").strip() or "General"
     description = request.form.get("description", "").strip() or None
     project_url = request.form.get("project_url", "").strip() or None
     raw_start = request.form.get("start_date", "").strip()

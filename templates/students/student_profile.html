@@ -180,11 +180,11 @@
                 <div class="mini-card-body">
                     <div class="mini-card-title">{{ cert.cert_name }}</div>
                     <div class="mini-card-sub">{{ cert.issuing_org }}
-                        {% if cert.issue_date %} &mdash; {{ cert.issue_date }}{% endif %}
+                        {% if cert.issue_date %} &mdash; {{ cert.issue_date.strftime('%b %Y') if cert.issue_date.strftime is defined else cert.issue_date }}{% endif %}
                     </div>
                 </div>
                 <form method="POST"
-                      action="{{ url_for('students.delete_certification', student_id=student.student_id, cert_id=cert.cert_id) }}"
+                      action="{{ url_for('students.delete_certification', student_id=student.student_id, cert_id=(cert.cert_id or cert.certification_id)) }}"
                       class="inline-form"
                       onsubmit="return confirm('Delete certification: {{ cert.cert_name }}?')">
                     <button type="submit" class="mini-card-delete" title="Remove">&times;</button>
@@ -309,8 +309,8 @@
                 <div class="mini-card-body">
                     <div class="mini-card-title">{{ intern.role }} @ {{ intern.company_name }}</div>
                     <div class="mini-card-sub">
-                        {% if intern.start_date %}{{ intern.start_date }}{% endif %}
-                        {% if intern.end_date %} &rarr; {{ intern.end_date }}{% endif %}
+                        {% if intern.start_date %}{{ intern.start_date.strftime('%b %Y') if intern.start_date.strftime is defined else intern.start_date }}{% endif %}
+                        {% if intern.end_date %} &rarr; {{ intern.end_date.strftime('%b %Y') if intern.end_date.strftime is defined else intern.end_date }}{% endif %}
                     </div>
                     {% if intern.description %}
                     <div class="mini-card-desc">{{ intern.description }}</div>
