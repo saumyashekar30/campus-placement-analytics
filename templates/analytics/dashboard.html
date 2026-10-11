@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Placement &amp; Application Analytics - Campus Placement Analytics System{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <!-- Header Section -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+        <div>
+            <div class="hero-badge" style="display: inline-block; margin-bottom: 0.5rem; background: #e0e7ff; color: #4338ca; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;">
+                Phase 7: Real-Time Oracle SQL Placement Analytics
+            </div>
+            <h1 class="page-title" style="font-size: 1.85rem; font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">
+                Placement &amp; Application Analytics
+            </h1>
+            <p class="page-subtitle" style="color: #64748b; font-size: 0.95rem;">
+                Live Oracle aggregations: non-duplicate candidate counts, hiring conversion funnels, and department benchmarks.
+            </p>
+        </div>
+
+        <!-- API Links Bar -->
+        <div class="api-links-group" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{{ url_for('analytics.get_analytics_overview') }}" target="_blank" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; border-radius: 6px; text-decoration: none; font-weight: 500;">
+                <span>⚡</span> GET /overview
+            </a>
+            <a href="{{ url_for('analytics.get_application_analytics') }}" target="_blank" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; border-radius: 6px; text-decoration: none; font-weight: 500;">
+                <span>📊</span> GET /applications
+            </a>
+            <a href="{{ url_for('analytics.get_placement_summary') }}" target="_blank" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; border-radius: 6px; text-decoration: none; font-weight: 500;">
+                <span>🎓</span> GET /placement-summary
+            </a>
+        </div>
+    </div>
+
+    {% if error_message %}
+    <div class="flash-alert flash-danger" style="margin-bottom: 2rem;">
+        <span class="flash-icon">⚠</span>
+        <span class="flash-message">{{ error_message }}</span>
+    </div>
+    {% endif %}
+
+    {% if overview %}
+    <!-- =========================================================================
+         1. SUMMARY CARDS GRID (PRIMARY DASHBOARD KPIS)
+         ========================================================================= -->
+    <div class="stats-overview-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        
+        <!-- Card 1: Total Registered Students -->
+        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Registered Students</span>
+                <span style="font-size: 1.4rem; background: #f1f5f9; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">👨‍🎓</span>
+            </div>
+            <div style="font-size: 2.1rem; font-weight: 800; color: #0f172a; line-height: 1;">
+                {{ overview.summary_cards.total_students }}
+            </div>
+            <div style="margin-top: 0.6rem; font-size: 0.8rem; color: #64748b;">
+                <span style="color: #0284c7; font-weight: 600;">100% Verified Profiles</span> in Oracle DB
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #0284c7;"></div>
+        </div>
+
+        <!-- Card 2: Uniquely Placed Students -->
+        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Uniquely Placed</span>
+                <span style="font-size: 1.4rem; background: #ecfdf5; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">🎯</span>
+            </div>
+            <div style="font-size: 2.1rem; font-weight: 800; color: #10b981; line-height: 1;">
+                {{ overview.summary_cards.uniquely_placed_students }}
+            </div>
+            <div style="margin-top: 0.6rem; font-size: 0.8rem; color: #64748b;">
+                <span style="color: #10b981; font-weight: 700;">{{ overview.summary_cards.placement_percentage }}%</span> Placement Rate &bull; {{ overview.summary_cards.unplaced_students }} Unplaced
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #10b981;"></div>
+        </div>
+
+        <!-- Card 3: Total Applications Submitted -->
+        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Total Applications</span>
+                <span style="font-size: 1.4rem; background: #f5f3ff; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">📋</span>
+            </div>
+            <div style="font-size: 2.1rem; font-weight: 800; color: #6366f1; line-height: 1;">
+                {{ overview.summary_cards.total_applications }}
+            </div>
+            <div style="margin-top: 0.6rem; font-size: 0.8rem; color: #64748b;">
+                Submitted across <span style="font-weight: 600; color: #4338ca;">{{ overview.summary_cards.total_companies }} active company drives</span>
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #6366f1;"></div>
+        </div>
+
+        <!-- Card 4: Application Status Tri-Split (Selected, Pending, Rejected) -->
+        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Application Pipeline</span>
+                <span style="font-size: 1.4rem; background: #fffbeb; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">⚖</span>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: baseline;">
+                <div>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: #10b981;">{{ overview.summary_cards.selected_applications }}</span>
+                    <span style="font-size: 0.75rem; color: #64748b; display: block;">Selected</span>
+                </div>
+                <div style="color: #cbd5e1;">|</div>
+                <div>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: #f59e0b;">{{ overview.summary_cards.pending_applications }}</span>
+                    <span style="font-size: 0.75rem; color: #64748b; display: block;">Pending</span>
+                </div>
+                <div style="color: #cbd5e1;">|</div>
+                <div>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: #ef4444;">{{ overview.summary_cards.rejected_applications }}</span>
+                    <span style="font-size: 0.75rem; color: #64748b; display: block;">Rejected</span>
+                </div>
+            </div>
+            <div style="margin-top: 0.6rem; font-size: 0.8rem; color: #64748b;">
+                {{ overview.application_status_summary.selected_percentage }}% Select &bull; {{ overview.application_status_summary.pending_percentage }}% In-Flight
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #f59e0b;"></div>
+        </div>
+
+        <!-- Card 5: Highest Package Offered -->
+        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Highest Package</span>
+                <span style="font-size: 1.4rem; background: #fef3c7; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">🏆</span>
+            </div>
+            <div style="font-size: 2.1rem; font-weight: 800; color: #d97706; line-height: 1;">
+                {{ overview.summary_cards.package_stats.highest_package_lpa }} <span style="font-size: 1rem; font-weight: 600;">LPA</span>
+            </div>
+            <div style="margin-top: 0.6rem; font-size: 0.8rem; color: #64748b;">
+                Average: <span style="font-weight: 700; color: #0f172a;">{{ overview.summary_cards.package_stats.avg_package_lpa }} LPA</span> &bull; Median: {{ overview.summary_cards.package_stats.median_package_lpa }} LPA
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #d97706;"></div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         2. CHARTS & VISUALIZATIONS SECTION
+         ========================================================================= -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Chart 1: Application Status Distribution Donut Chart -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <div>
+                    <h2 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem;">Application Status Distribution</h2>
+                    <p style="font-size: 0.8rem; color: #64748b;">Breakdown of all {{ overview.summary_cards.total_applications }} submitted applications</p>
+                </div>
+                <span style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: #475569;">Live Data</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
+                <!-- Canvas for Chart.js -->
+                <div style="position: relative; width: 220px; height: 220px;">
+                    <canvas id="statusDonutChart"></canvas>
+                </div>
+
+                <!-- Status Distribution List / Legend -->
+                <div style="width: 100%; display: flex; flex-direction: column; gap: 0.65rem;">
+                    {% for item in overview.status_distribution %}
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 0.4rem 0.6rem; border-radius: 6px; background: #f8fafc;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ item.color }}; display: inline-block;"></span>
+                            <span style="font-weight: 600; color: #1e293b;">{{ item.status }}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-weight: 700; color: #0f172a;">{{ item.count }} apps</span>
+                            <span style="color: #64748b; font-size: 0.8rem; min-width: 48px; text-align: right;">{{ item.percentage }}%</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Department-wise Placement Rate Bars -->
+        {% if placement_data and placement_data.branch_summary %}
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <div>
+                    <h2 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem;">Branch Placement Rates</h2>
+                    <p style="font-size: 0.8rem; color: #64748b;">Placement % and candidate placement ratio per academic branch</p>
+                </div>
+                <span style="background: #ecfdf5; color: #065f46; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">{{ overview.summary_cards.placement_percentage }}% Overall</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1.1rem;">
+                {% for b in placement_data.branch_summary %}
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem; font-size: 0.85rem;">
+                        <div>
+                            <strong style="color: #0f172a; font-size: 0.95rem;">{{ b.branch }}</strong>
+                            <span style="color: #64748b; font-size: 0.8rem; margin-left: 0.3rem;">({{ b.placed_students }}/{{ b.total_students }} Placed)</span>
+                        </div>
+                        <div>
+                            <span style="font-weight: 700; color: {% if b.placement_percentage >= 70 %}#10b981{% elif b.placement_percentage >= 40 %}#3b82f6{% elif b.placement_percentage > 0 %}#f59e0b{% else %}#94a3b8{% endif %};">
+                                {{ b.placement_percentage }}%
+                            </span>
+                            {% if b.avg_package_lpa > 0 %}
+                            <span style="color: #64748b; font-size: 0.75rem; margin-left: 0.4rem;">&bull; Avg {{ b.avg_package_lpa }} LPA</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
+                        <div style="height: 100%; width: {{ b.placement_percentage }}%; background: {% if b.placement_percentage >= 70 %}#10b981{% elif b.placement_percentage >= 40 %}#3b82f6{% elif b.placement_percentage > 0 %}#f59e0b{% else %}#cbd5e1{% endif %}; border-radius: 9999px; transition: width 0.6s ease;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Salary Benchmarks Strip -->
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed #e2e8f0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                <div style="background: #f8fafc; padding: 0.6rem; border-radius: 6px;">
+                    <div style="font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Highest CTC</div>
+                    <div style="font-size: 1.1rem; font-weight: 800; color: #0f172a;">{{ placement_data.salary_benchmarks.highest_package_lpa }} <span style="font-size: 0.7rem;">LPA</span></div>
+                </div>
+                <div style="background: #f8fafc; padding: 0.6rem; border-radius: 6px;">
+                    <div style="font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Average CTC</div>
+                    <div style="font-size: 1.1rem; font-weight: 800; color: #4338ca;">{{ placement_data.salary_benchmarks.average_package_lpa }} <span style="font-size: 0.7rem;">LPA</span></div>
+                </div>
+                <div style="background: #f8fafc; padding: 0.6rem; border-radius: 6px;">
+                    <div style="font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Median CTC</div>
+                    <div style="font-size: 1.1rem; font-weight: 800; color: #0284c7;">{{ placement_data.salary_benchmarks.median_package_lpa }} <span style="font-size: 0.7rem;">LPA</span></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- =========================================================================
+         3. COMPANY HIRING FUNNEL & CONVERSION TABLE
+         ========================================================================= -->
+    {% if placement_data and placement_data.company_hiring_funnel %}
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem;">Company Recruitment &amp; Hiring Funnel</h2>
+                <p style="font-size: 0.8rem; color: #64748b;">Recruitment pipeline conversion: applicant volume vs accepted offers per company drive</p>
+            </div>
+            <a href="{{ url_for('companies.list_companies') }}" style="font-size: 0.85rem; color: #4f46e5; text-decoration: none; font-weight: 600;">Manage Drives &rarr;</a>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; background: #f8fafc;">
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Company</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Job Role</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Offered CTC</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600; text-align: center;">Applicants</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600; text-align: center;">Hires</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600; text-align: right;">Conversion %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in placement_data.company_hiring_funnel %}
+                    <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
+                        <td style="padding: 0.85rem 1rem; font-weight: 600; color: #0f172a;">
+                            {{ c.company_name }}
+                        </td>
+                        <td style="padding: 0.85rem 1rem; color: #475569;">
+                            {{ c.job_role }}
+                        </td>
+                        <td style="padding: 0.85rem 1rem; font-weight: 700; color: #0f172a;">
+                            {{ c.offered_ctc_lpa }} LPA
+                        </td>
+                        <td style="padding: 0.85rem 1rem; text-align: center;">
+                            <span style="background: #f1f5f9; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 600; color: #334155;">
+                                {{ c.total_applicants }}
+                            </span>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; text-align: center;">
+                            <span style="background: #ecfdf5; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 700; color: #065f46;">
+                                {{ c.total_hires }}
+                            </span>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; text-align: right; font-weight: 700; color: {% if c.conversion_percentage >= 50 %}#10b981{% elif c.conversion_percentage > 0 %}#3b82f6{% else %}#94a3b8{% endif %};">
+                            {{ c.conversion_percentage }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- =========================================================================
+         4. RECENT APPLICATIONS QUICK ROSTER
+         ========================================================================= -->
+    {% if app_data and app_data.recent_applications %}
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem;">Recent Candidate Applications</h2>
+                <p style="font-size: 0.8rem; color: #64748b;">Latest applications submitted with current lifecycle review status</p>
+            </div>
+            <a href="{{ url_for('applications.list_applications') }}" style="font-size: 0.85rem; color: #4f46e5; text-decoration: none; font-weight: 600;">View All Applications &rarr;</a>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; background: #f8fafc;">
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">App ID</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Student</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Branch</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Company &amp; Role</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Date</th>
+                        <th style="padding: 0.75rem 1rem; color: #475569; font-weight: 600;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in app_data.recent_applications %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 0.85rem 1rem; color: #64748b; font-family: monospace;">#{{ a.application_id }}</td>
+                        <td style="padding: 0.85rem 1rem; font-weight: 600; color: #0f172a;">{{ a.student_name }}</td>
+                        <td style="padding: 0.85rem 1rem; color: #475569;">{{ a.branch }}</td>
+                        <td style="padding: 0.85rem 1rem; color: #334155;">
+                            <strong>{{ a.company_name }}</strong>
+                            <span style="font-size: 0.8rem; color: #64748b; display: block;">{{ a.job_role }}</span>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; color: #64748b; font-size: 0.8rem;">
+                            {{ a.application_date[:10] }}
+                        </td>
+                        <td style="padding: 0.85rem 1rem;">
+                            <span class="badge badge-{{ a.badge_class }}" style="padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                                {{ a.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+
+<!-- Chart.js CDN for client-side Donut Chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    {% if app_data and app_data.chart_data %}
+    const chartData = {{ app_data.chart_data|tojson }};
+    const ctx = document.getElementById("statusDonutChart");
+    if (ctx && chartData.labels && chartData.labels.length > 0) {
+        new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.counts,
+                    backgroundColor: chartData.background_colors,
+                    borderWidth: 2,
+                    borderColor: "#ffffff"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const idx = context.dataIndex;
+                                const count = chartData.counts[idx];
+                                const pct = chartData.percentages[idx];
+                                return ` ${chartData.labels[idx]}: ${count} applications (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: "68%"
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

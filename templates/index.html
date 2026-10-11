@@ -4,8 +4,9 @@
 
 {% block content %}
 <div class="hero-section">
-    <div class="hero-badge">Phase 6: Application &amp; Interview Tracking Module</div>
+    <div class="hero-badge">Phase 7: Real-Time Placement Analytics &amp; Reporting Engine</div>
     <h1 class="hero-title">Campus Placement Analytics System</h1>
+
     <p class="hero-subtitle">
         Bridging the Python Flask web application with the Oracle SQL relational database.
     </p>
@@ -97,22 +98,36 @@
                 </div>
             </div>
         </a>
+
+        <a href="{{ url_for('analytics.analytics_dashboard') }}" class="dashboard-card">
+            <div class="card-icon">📊</div>
+            <div class="card-body">
+                <h3>Placement Analytics &amp; Reports</h3>
+                <p>Real-time analytics, unique placed count, application status distribution, and JSON APIs.</p>
+                <div class="card-meta">
+                    <span class="meta-badge">{{ placed_count }} Placed ({{ placement_pct }}%)</span>
+                    <span class="meta-link">View Analytics &rarr;</span>
+                </div>
+            </div>
+        </a>
     </div>
 
     <!-- Architecture Roadmap Box -->
     <div class="info-card">
-        <h3>Current Pipeline: Phase 6 Architecture</h3>
+        <h3>Current Pipeline: Phase 7 Architecture</h3>
+
         <div class="pipeline-flow">
             <span class="pipeline-step">Browser UI</span>
             <span class="pipeline-arrow">&rarr;</span>
             <span class="pipeline-step">Flask Framework (app.py)</span>
             <span class="pipeline-arrow">&rarr;</span>
-            <span class="pipeline-step">Eligibility Engine</span>
+            <span class="pipeline-step">Eligibility &amp; Analytics Engines</span>
             <span class="pipeline-arrow">&rarr;</span>
             <span class="pipeline-step">python-oracledb Driver</span>
             <span class="pipeline-arrow">&rarr;</span>
-            <span class="pipeline-step">Oracle SQL (APPLICATION / INTERVIEW)</span>
+            <span class="pipeline-step">Oracle SQL (APPLICATION / PLACEMENT)</span>
         </div>
     </div>
+
 </div>
 {% endblock %}
