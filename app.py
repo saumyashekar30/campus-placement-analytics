@@ -12,6 +12,7 @@ from routes.company_routes import company_bp
 from routes.eligibility_routes import eligibility_bp
 from routes.application_routes import application_bp
 from routes.interview_routes import interview_bp
+from routes.analytics_routes import analytics_bp
 
 
 def _to_python(v):
@@ -29,6 +30,8 @@ app.register_blueprint(company_bp)
 app.register_blueprint(eligibility_bp)
 app.register_blueprint(application_bp)
 app.register_blueprint(interview_bp)
+app.register_blueprint(analytics_bp)
+
 
 
 @app.route("/")
@@ -44,6 +47,8 @@ def home():
     company_count = 0
     application_count = 0
     selected_count = 0
+    placed_count = 0
+    placement_pct = 0.0
 
     if db_connected:
         try:
@@ -64,6 +69,16 @@ def home():
                 cursor.execute("SELECT COUNT(*) FROM APPLICATION WHERE status = 'Selected'")
                 row = cursor.fetchone()
                 selected_count = row[0] if row else 0
+
+                cursor.execute("""
+                    SELECT COUNT(DISTINCT p.student_id)
+                    FROM PLACEMENT p
+                    WHERE p.acceptance_status = 'Accepted'
+                """)
+                p_row = cursor.fetchone()
+                placed_count = p_row[0] if p_row else 0
+                placement_pct = round((placed_count * 100.0) / student_count, 2) if student_count > 0 else 0.0
+
             conn.close()
         except Exception as e:
             print(f"[WARNING] Could not fetch table counts: {e}")
@@ -76,8 +91,11 @@ def home():
         student_count=student_count,
         company_count=company_count,
         application_count=application_count,
-        selected_count=selected_count
+        selected_count=selected_count,
+        placed_count=placed_count,
+        placement_pct=placement_pct
     )
+
 
 
 # ----------------------------------------------------------------------------

@@ -26,5 +26,11 @@ PROMPT =======================================================
 @@03_queries.sql
 
 PROMPT =======================================================
+PROMPT 4. EXECUTING PHASE 7 ADVANCED ANALYTICS QUERIES...
+PROMPT =======================================================
+@@04_analytics_queries.sql
+
+PROMPT =======================================================
 PROMPT CAMPUS PLACEMENT DATABASE SETUP COMPLETE!
 PROMPT =======================================================
+
