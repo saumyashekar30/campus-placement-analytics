@@ -13,6 +13,7 @@ from routes.eligibility_routes import eligibility_bp
 from routes.application_routes import application_bp
 from routes.interview_routes import interview_bp
 from routes.analytics_routes import analytics_bp
+from routes.company_analytics_routes import company_analytics_bp
 
 
 def _to_python(v):
@@ -31,6 +32,7 @@ app.register_blueprint(eligibility_bp)
 app.register_blueprint(application_bp)
 app.register_blueprint(interview_bp)
 app.register_blueprint(analytics_bp)
+app.register_blueprint(company_analytics_bp)
 
 
 

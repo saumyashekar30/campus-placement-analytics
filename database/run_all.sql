@@ -31,6 +31,11 @@ PROMPT =======================================================
 @@04_analytics_queries.sql
 
 PROMPT =======================================================
+PROMPT 5. EXECUTING COMPANY, BRANCH & PACKAGE ANALYTICS QUERIES...
+PROMPT =======================================================
+@@05_company_analytics.sql
+
+PROMPT =======================================================
 PROMPT CAMPUS PLACEMENT DATABASE SETUP COMPLETE!
 PROMPT =======================================================
 
