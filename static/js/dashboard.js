@@ -37,11 +37,31 @@
   }
   function clearError() { $('error-box').hidden = true; }
   async function json(path, signal) {
-    const response = await fetch(`${root}${path}`,{headers:{Accept:'application/json'},signal});
-    if (!response.ok) throw new Error(`API returned HTTP ${response.status}`);
-    const result = await response.json();
-    if (result.status === 'error' || result.success === false) throw new Error(result.error || result.message || 'Service unavailable');
-    return result;
+    // Oracle connection attempts can stall; never let a database outage freeze the UI.
+    const timeout = new AbortController();
+    const onAbort = () => timeout.abort();
+    const timer = setTimeout(() => timeout.abort(), 4500);
+    if (signal) {
+      if (signal.aborted) onAbort();
+      else signal.addEventListener('abort', onAbort, {once:true});
+    }
+    try {
+      const response = await fetch(`${root}${path}`, {
+        headers:{Accept:'application/json'}, signal:timeout.signal
+      });
+      if (!response.ok) throw new Error(`API returned HTTP ${response.status}`);
+      const result = await response.json();
+      if (result.status === 'error' || result.success === false)
+        throw new Error(result.error || result.message || 'Service unavailable');
+      return result;
+    } catch(err) {
+      if (timeout.signal.aborted && !signal?.aborted)
+        throw new Error('The analytics service did not respond in time.');
+      throw err;
+    } finally {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort',onAbort);
+    }
   }
   const ready = () => typeof window.Chart !== 'undefined';
 
@@ -232,44 +252,130 @@
     if(!ready())errorBox('Chart.js could not load','KPI values and tables remain available. Check your internet connection to enable charts.');
   }
 
+  // Synthetic data is available for UI testing even with no Oracle instance.
+  // Never present the preview as real placement statistics.
+  function populateSelect(id, options) {
+    const control = $(id);
+    const selected = control.value;
+    while (control.options.length > 1) control.remove(1);
+    options.forEach(item => control.add(new Option(item.label, item.value)));
+    control.value = selected;
+    if (control.selectedIndex < 0) control.value = '';
+  }
+
+  function useSampleFilterOptions() {
+    populateSelect('branch-filter',demo.branches.map(b => ({value:b.branch,label:b.branch})));
+    populateSelect('company-filter',demo.companies.map((c,i) => ({value:String(i+1),label:c.company_name})));
+    populateSelect('year-filter',[{value:'2026',label:'2026 (sample)'},{value:'2025',label:'2025 (empty sample)'}]);
+  }
+
   async function loadFilterOptions() {
-    try{
+    try {
       const r=await json('/filters');
+      if(preview) return;
       filterOptions=r.data;
-      for(const [select,values] of [
-        ['branch-filter',(r.data.branches||[]).map(x=>({value:x,label:x}))],
-        ['company-filter',(r.data.companies||[]).map(x=>({value:x.company_id,label:x.company_name}))],
-        ['year-filter',(r.data.years||[]).map(x=>({value:x,label:x}))],
-      ]){
-        const el=$(select),selected=el.value;
-        while(el.options.length>1)el.remove(1);
-        for(const x of values){const option=new Option(x.label,x.value);el.add(option);}
-        el.value=selected;
-      }
-    }catch(e){ /* An offline database should not disable the dashboard shell. */ }
+      populateSelect('branch-filter',(r.data.branches||[]).map(x=>({value:x,label:x})));
+      populateSelect('company-filter',(r.data.companies||[]).map(x=>({value:x.company_id,label:x.company_name})));
+      populateSelect('year-filter',(r.data.years||[]).map(x=>({value:x,label:x})));
+    } catch(e) {
+      // The offline preview supplies its own clearly marked filter options.
+    }
+  }
+
+  function filteredSample() {
+    const f=filters();
+    const result=structuredClone(demo);
+    if (f.year && f.year !== '2026') {
+      result.summary={students:0,placed:0,placement_rate:0,applications:0,selected:0,rejected:0,pending:0,highest_package:0,average_package:0,lowest_package:0};
+      result.branches=[];result.companies=[];result.statuses=[];result.recent=[];
+      result.interviews={total:0,passed:0,failed:0,pending:0,scheduled:0,success_rate:0,rounds:[]};
+      return result;
+    }
+    const branch=demo.branches.find(b=>b.branch===f.branch);
+    const company=demo.companies[Number(f.company)-1];
+    const bf=branch ? branch.total_students/demo.summary.students : 1;
+    const cf=company ? company.students_placed/demo.summary.placed : 1;
+    const scale=bf*cf;
+    if (branch) result.branches=[branch];
+    if (company) result.companies=[company];
+    if (company && !branch)
+      result.branches=result.branches.map(b=>({...b,
+        placed_students:Math.round(b.placed_students*cf),
+        placement_percentage:Math.round(b.placement_percentage*cf*100)/100}));
+    if (branch && !company)
+      result.companies=result.companies.map(c=>({...c,
+        offers_made:Math.round(c.offers_made*bf),
+        students_placed:Math.round(c.students_placed*bf)}));
+    if (branch && company)
+      result.companies=[{...company,
+        offers_made:Math.round(company.offers_made*bf),
+        students_placed:Math.round(company.students_placed*bf)}];
+    const students=branch ? branch.total_students : demo.summary.students;
+    const placed=Math.min(students,Math.round((branch ? branch.placed_students:demo.summary.placed)*cf));
+    const applications=Math.round(demo.summary.applications*scale);
+    let remaining=applications;
+    result.statuses=demo.statuses.map((s,i)=>{
+      const count=i===demo.statuses.length-1?remaining:Math.min(remaining,Math.round(s.count*scale));
+      remaining-=count;
+      return {...s,count};
+    });
+    const statuses=Object.fromEntries(result.statuses.map(s=>[s.status,s.count]));
+    result.summary={
+      ...demo.summary,students,placed,
+      placement_rate:students?Math.round(placed*10000/students)/100:0,
+      applications,selected:statuses.Selected||0,rejected:statuses.Rejected||0,
+      pending:applications-(statuses.Selected||0)-(statuses.Rejected||0),
+      highest_package:company?company.average_package:demo.summary.highest_package,
+      average_package:company?company.average_package:demo.summary.average_package,
+      lowest_package:company?company.average_package:demo.summary.lowest_package
+    };
+    result.recent=demo.recent.filter(a=>(!branch||a.branch===branch.branch)
+       &&(!company||a.company_name===company.company_name));
+    const ix=result.interviews;
+    for(const key of ['passed','failed','scheduled','pending'])
+      ix[key]=Math.round(ix[key]*scale);
+    ix.total=ix.passed+ix.failed+ix.scheduled+ix.pending;
+    ix.success_rate=ix.passed+ix.failed?Math.round(ix.passed*10000/(ix.passed+ix.failed))/100:0;
+    ix.rounds=ix.rounds.map(r=>({...r,passed:Math.round(r.passed*scale),failed:Math.round(r.failed*scale)}));
+    return result;
+  }
+
+  function updateSample() {
+    if (!preview) return;
+    render(filteredSample());
+    status('ready','Sample preview — all figures are synthetic');
+    setText('status-time','Not live data');
   }
 
   async function load() {
-    preview=false;$('demo-banner').hidden=true;
+    preview=false;
+    $('demo-banner').hidden=true;
     const f=filters(),id=++requestId;
-    controller?.abort();controller=new AbortController();
-    clearError();status('loading',hasFilter(f)?'Applying Oracle database filters…':'Fetching live placement analytics…');
-    try{
-      if(hasFilter(f)){
+    controller?.abort();
+    controller=new AbortController();
+    clearError();
+    status('loading',hasFilter(f)?'Applying Oracle database filters…':'Connecting to Oracle analytics…');
+    try {
+      if (hasFilter(f)) {
         const q=new URLSearchParams(Object.entries(f).filter(([,v])=>v));
         const scoped=await json('/dashboard-scoped?'+q,controller.signal);
         if(id!==requestId)return;
         render(normalizeScoped(scoped));
         status('ready','Showing filtered Oracle analytics');
-      }else{
+      } else {
+        // Check one team API before calling six more. When Oracle is offline,
+        // seven simultaneous connection attempts unnecessarily block the preview.
+        const overview=await json('/overview',controller.signal);
+        if(id!==requestId)return;
         const paths={
-          overview:'/overview',applications:'/applications',placement:'/placement-summary',
-          companies:'/companies',branches:'/branches',packages:'/packages',interviews:'/interviews'
+          applications:'/applications',placement:'/placement-summary',
+          companies:'/companies',branches:'/branches',packages:'/packages',
+          interviews:'/interviews'
         };
         const keys=Object.keys(paths);
         const outcomes=await Promise.allSettled(keys.map(k=>json(paths[k],controller.signal)));
         if(id!==requestId)return;
-        const good={},failed=[];
+        const good={overview},failed=[];
         for(let i=0;i<keys.length;i++){
           if(outcomes[i].status==='fulfilled')good[keys[i]]=outcomes[i].value;
           else failed.push(keys[i]);
@@ -277,23 +383,31 @@
         render(normalizedDefault(good));
         if(failed.length){
           status('error',`Some analytics services are unavailable (${failed.length}/${keys.length})`);
-          errorBox('Some analytics could not be loaded',`Unavailable sections: ${failed.join(', ')}. The rest of the dashboard reflects available live data.`);
-        }else status('ready','All analytics are connected to Oracle');
+          errorBox('Some live charts are unavailable',
+            `Unavailable sections: ${failed.join(', ')}. Available figures remain live; no sample data is mixed in.`);
+        }else status('ready','All team analytics endpoints connected');
       }
     }catch(e){
       if(e.name==='AbortError'||id!==requestId)return;
-      render({summary:null,statuses:[],branches:[],companies:[],recent:[],interviews:null});
-      status('error','Analytics service unavailable');
-      errorBox('Could not load filtered analytics','The database or API is unavailable for this filter combination. Try again or preview sample data.');
+      showDemo();
+      errorBox('Oracle analytics are unavailable',
+        'The dashboard has switched to a clearly labeled synthetic preview. Use Retry or Refresh after Oracle is connected.');
     }
   }
 
   function showDemo() {
-    requestId++;controller?.abort();preview=true;clearError();
+    requestId++;
+    controller?.abort();
+    if (!preview) {
+      // Reset filters from real database IDs when entering the demo. Sample
+      // company IDs are independent from production database company IDs.
+      for(const id of ['branch-filter','company-filter','year-filter'])$(id).value='';
+    }
+    preview=true;
+    clearError();
     $('demo-banner').hidden=false;
-    render(structuredClone(demo));
-    status('ready','Sample data preview (not connected to Oracle)');
-    setText('status-time','Synthetic preview');
+    useSampleFilterOptions();
+    updateSample();
   }
 
   function csvCell(v){return '"'+String(v===null||v===undefined?'':v).replaceAll('"','""')+'"';}
@@ -315,12 +429,14 @@
     $('refresh-btn').addEventListener('click',()=>{loadFilterOptions();load();});
     $('retry-btn').addEventListener('click',load);
     $('demo-btn').addEventListener('click',showDemo);
+    $('sample-preview-btn').addEventListener('click',showDemo);
     $('leave-demo').addEventListener('click',load);
     $('export-btn').addEventListener('click',downloadCSV);
-    for(const id of ['branch-filter','company-filter','year-filter'])$(id).addEventListener('change',load);
+    for(const id of ['branch-filter','company-filter','year-filter'])
+      $(id).addEventListener('change',()=>{if(preview) updateSample(); else load();});
     $('reset-filters').addEventListener('click',()=>{
       for(const id of ['branch-filter','company-filter','year-filter'])$(id).value='';
-      load();
+      if(preview)updateSample();else load();
     });
     const sidebar=$('sidebar'),shade=$('mobile-shade');
     const close=()=>{sidebar.classList.remove('open');shade.classList.remove('visible');};

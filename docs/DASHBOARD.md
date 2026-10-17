@@ -8,7 +8,7 @@ Built as the frontend/interview-analytics portion of the Campus Placement Analyt
 2. Install dependencies: `pip install -r requirements.txt`.
 3. Start: `python app.py` and open `http://127.0.0.1:5000/analytics` or `/analytics/dashboard`.
 
-The page loads even without Oracle; it shows a clearly labeled connection error and allows an optional **sample data preview**. The preview is synthetic and must never be used as real results.
+The page loads even without Oracle; automatically switches to a clearly labeled **synthetic sample-data preview** when Oracle cannot respond; a permanent Sample Preview control is also available. The preview is synthetic and must never be used as real results.
 
 ## API integration
 
@@ -44,3 +44,11 @@ The API uses bound Oracle parameters (not interpolated user data), and all query
 Run `python -m unittest discover -s tests -p "test_dashboard_api.py" -v` to run mocked integration and input validation tests (does not require an Oracle instance).
 
 A real Oracle instance is needed to verify data-dependent queries against the seeded database. Chart.js loads from jsDelivr and fonts from Google Fonts, so visual charts/fonts require network access unless those assets are hosted locally.
+
+
+## Browser integration verification
+
+- `python -m unittest discover -s tests -p "test_*.py"` tests Person 2 company, branch, and package transformations alongside the dashboard API.
+- Run Flask on port 5059 and execute `python tests/browser_smoke.py` for offline-preview, filters, charts, reset, retry, export, and mobile-navigation tests.
+- Run `python tests/fixture_server.py` on port 5077 and execute `python tests/browser_contract.py` to verify the existing Person 1 and Person 2 Flask routes feed all five charts. These are **mocked service contracts**, not live Oracle SQL benchmark results.
+- Browser tests need Selenium and a headless Chrome/Chromium + ChromeDriver. No test fixtures are installed in production.
