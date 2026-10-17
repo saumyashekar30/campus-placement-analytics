@@ -21,6 +21,11 @@ PROMPT =======================================================
 @@02_seed_data.sql
 
 PROMPT =======================================================
+PROMPT 2A. ALIGNING AUTO-GENERATED IDS AFTER SAMPLE DATA...
+PROMPT =======================================================
+@@06_sync_identity.sql
+
+PROMPT =======================================================
 PROMPT 3. EXECUTING ANALYTICAL AND VERIFICATION QUERIES...
 PROMPT =======================================================
 @@03_queries.sql
