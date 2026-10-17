@@ -494,23 +494,6 @@ def analytics_dashboard():
             request.headers.get("Accept") == "application/json"):
         return get_analytics_overview()
 
-    error_message = None
-    overview = None
-    app_data = None
-    placement_data = None
-
-    try:
-        overview = _fetch_overview_data()
-        app_data = _fetch_application_analytics_data()
-        placement_data = _fetch_placement_summary_data()
-    except Exception as e:
-        error_message = f"Error loading analytics data: {str(e)}"
-        print(f"[ERROR] Dashboard data load failed: {e}")
-
-    return render_template(
-        "analytics/dashboard.html",
-        overview=overview,
-        app_data=app_data,
-        placement_data=placement_data,
-        error_message=error_message
-    )
+    # Render immediately; the dashboard loads APIs asynchronously so database
+    # outages cannot prevent the interface and retry controls from opening.
+    return render_template("analytics/dashboard.html")
