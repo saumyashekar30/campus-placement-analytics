@@ -1,0 +1,4 @@
+# Linux/HP360 private preview and Selenium test utilities
+-r requirements.txt
+gunicorn>=22,<24
+selenium>=4.20,<5

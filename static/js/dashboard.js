@@ -410,7 +410,12 @@
     updateSample();
   }
 
-  function csvCell(v){return '"'+String(v===null||v===undefined?'':v).replaceAll('"','""')+'"';}
+  function csvCell(v){
+    const raw=String(v===null||v===undefined?'':v);
+    // Prevent Excel/Sheets formula execution when exporting untrusted text.
+    const safe=/^[\s]*[=+@-]/.test(raw) && !/^-?\d+(\.\d+)?$/.test(raw.trim()) ? "'"+raw : raw;
+    return '"'+safe.replaceAll('"','""')+'"';
+  }
   function downloadCSV() {
     if(!data){errorBox('No data to export','Load the dashboard before exporting.');return;}
     const rows=[['Record Type','Name','Branch','Company','Status','Value','Date']];
@@ -425,12 +430,21 @@
     URL.revokeObjectURL(url);
   }
 
+  function reloadLive(){
+    if(preview) {
+      // Sample company IDs are unrelated to Oracle company IDs.
+      for(const id of ['branch-filter','company-filter','year-filter'])$(id).value='';
+    }
+    loadFilterOptions();
+    load();
+  }
+
   function init() {
-    $('refresh-btn').addEventListener('click',()=>{loadFilterOptions();load();});
+    $('refresh-btn').addEventListener('click',reloadLive);
     $('retry-btn').addEventListener('click',load);
     $('demo-btn').addEventListener('click',showDemo);
     $('sample-preview-btn').addEventListener('click',showDemo);
-    $('leave-demo').addEventListener('click',load);
+    $('leave-demo').addEventListener('click',reloadLive);
     $('export-btn').addEventListener('click',downloadCSV);
     for(const id of ['branch-filter','company-filter','year-filter'])
       $(id).addEventListener('change',()=>{if(preview) updateSample(); else load();});
